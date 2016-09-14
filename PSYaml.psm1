@@ -1,5 +1,52 @@
-﻿Add-Type -Path "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\YAMLdotNet\YamlDotNet.3.8.0\lib\dotnet\yamldotnet.dll"
+﻿
+<#
+    .SYNOPSIS
+        Get latest version of NET assembly for YAMLdotNet, Add the type
+    
+    .DESCRIPTION
+        This basically adds the YamlDotNet assembly. If you haven't got it, it gets it gor you. If you want it to, it updates the assembly to the latest version.
+    
+    .PARAMETER CheckForUpdate
+        Force a check for an update. This is the only reason that this function is exposed.
+    
+    .EXAMPLE
+        		PS C:\> Initialize-PsYAML_Module -CheckForUpdate $true #check for update and load 
+    
+    .NOTES
+        Additional information about the function.
+#>
+function Initialize-PsYAML_Module
+{
+    [CmdletBinding()]
+    param
+    (
+        [boolean]$CheckForUpdate = $false
+    )
+    $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\YAMLdotNet"
+    if (!(test-path $YAMLDotNetLocation))
+       {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
+    push-location #save the current location
+    Set-Location -Path $YAMLDotNetLocation #set the location in case we need an update
+    if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet*"))
+    {
+        #Is it missing, or are we checking for an update?
+        if (-not (test-path "$($YAMLDotNetLocation)\nuget.exe")) # is nuget installed?
+        {
+            #No nuget! we need to install it.
+            Invoke-WebRequest $NugetDistribution -OutFile "$($YAMLDotNetLocation)\nuget.exe"
+        }
+        Set-Alias nuget "$($YAMLDotNetLocation)\nuget.exe" -Scope Script -Verbose
+        nuget install yamldotnet #now install or update YAMLDotNet
+    }
+    #now get the latest version of YAMLdotNet that we have
+    $CurrentRelease = Get-ChildItem | where { $_.PSIsContainer } | sort CreationTime -desc | select -f 1
+    pop-location
+    Add-Type -Path "$YAMLDotNetLocation\$CurrentRelease\lib\dotnet\yamldotnet.dll"
+    
+}
 
+Initialize-PsYAML_Module
 
 function ConvertTo-YAML
 {
@@ -314,4 +361,4 @@ $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
 
 
 	
-Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize
+Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, Initialize-PsYAML_Module
