@@ -7,6 +7,18 @@ PSYaml is a simple PowerShell module that I've written that allows you to serial
 ----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
 ----
+I do it, or update it via script like this
+[source,powershell]
+----
+
+$YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\"
+if (!(test-path $YAMLDotNetLocation)) {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
+$client = new-object Net.WebClient
+$client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/blob/master/PSYaml.psd1', "$($YAMLDotNetLocation)PSYaml.psd1")
+$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/blob/master/PSYaml.psm1', "$($YAMLDotNetLocation)PSYaml.psm1")
+----
+
 And then you can load it into your PowerShell like this. 
 [source,powershell]
 ----
