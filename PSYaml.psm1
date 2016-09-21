@@ -24,8 +24,6 @@ function Initialize-PsYAML_Module
     )
     $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
     $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\YAMLdotNet"
-    if (!(test-path $YAMLDotNetLocation))
-       {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
     push-location #save the current location
     Set-Location -Path $YAMLDotNetLocation #set the location in case we need an update
     if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet*"))
@@ -196,27 +194,13 @@ function ConvertTo-YAML
 	
 	<#
 	    .SYNOPSIS
-	        Converts from a YAMLdotNet Document to an appropriate native PowerShell object
+	        Converts from a YAMLdotNet Document 
 	    
 	    .DESCRIPTION
-	        A typical YAML library will parse the presentation stream and compose the Representation 
-        Graph. The final input process is to construct the native data structures from the YAML 
-        representational graph. The advantage of this is that you can use PowerShell objects and 
-        specify how your special data types are treated in the conversion process. 
-        Because YAML is a superset of JSON, you still have to allow untyped values that then have to
-        be checked to see what sort of data it contains.
-        This routine examines each node recursively to create a data object. Each node contain
-        the object, the style, tag and anchor. The mapping-style of the node is the way it is formatted
-        in the document, The anchor is used where a node references another node to get its value, 
-        and a tag tells you what sort of data type it needs, explicitly. This will include ‘omap’,
-        ‘seq’ or ‘map’, where the node contains a list, sequence or a dictionary, or ‘float’, ‘int’,
-        ‘null’, ‘bool’ or ‘str’ if it has a simple value. You can specify your own special data, such
-        as coordinates, table data or whatever you wish. To cope with these, you will need to amend
-        the routine
+	        A detailed description of the ConvertFrom-YAMLDocument function.
 	    
 	    .PARAMETER TheNode
-	       This will be taken from the YAML.net document, which is one or more representational 
-        models from the YAML document
+	        A description of the TheNode parameter.
 	    
 	    .EXAMPLE
 	        		PS C:\> ConvertFrom-YAMLDocument -TheNode $value1
@@ -242,7 +226,7 @@ function ConvertTo-YAML
         A detailed description of the ConvertFrom-YAMLDocument function.
     
     .PARAMETER TheNode
-        a node from the YAML representational model.
+        A description of the TheNode parameter.
     
     .EXAMPLE
         		PS C:\> ConvertFrom-YAMLDocument -TheNode $value1
@@ -346,6 +330,21 @@ $Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, S
 $stream.ToString()
 }
 
+Function JSONSerialize
+    {
+    [CmdletBinding()]
+    param
+    (
+         [object]$PowershellObject
+    )
+$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
+#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+$stringBuilder = New-Object System.Text.StringBuilder
+$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
+$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+$stream.ToString()
+}
+
 Function YAMLDeserialize
 
     {
@@ -359,6 +358,37 @@ $Deserializer=New-Object -TypeName YamlDotNet.Serialization.Deserializer -Argume
 $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
 }
 
+Function YAMLSerialize
+    {
+    [CmdletBinding()]
+    param
+    (
+         [object]$PowershellObject
+    )
+$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
+#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+$stringBuilder = New-Object System.Text.StringBuilder
+$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
+$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+$stream.ToString()
+}
 
-	
-Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, Initialize-PsYAML_Module
+Function Convert-YAMLtoJSON
+{
+    [CmdletBinding()]
+    param
+    (
+        [string]$YAMLstring
+    )
+    $stringReader = new-object System.IO.StringReader($YAMLstring)
+    $Deserializer = New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
+    $netObject = $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
+    $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
+    #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+    $stringBuilder = New-Object System.Text.StringBuilder
+    $stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder
+    $Serializer.Serialize($stream, $netObject) #
+    $stream.ToString()
+}
+
+Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, JSONSerialize, Convert-YAMLtoJSON

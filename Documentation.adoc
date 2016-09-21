@@ -2,7 +2,7 @@
 
 <<<
 
-PSYaml is a simple PowerShell module that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. You simply load the powershell file and the manifest into this directory 
+PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. You simply load the powershell file and the manifest into this directory 
 [source,powershell]
 ----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
@@ -13,6 +13,56 @@ And then you can load it into your PowerShell like this.
 import-module psyaml 
 ----
 The first time you do it, you need to be connected to the internet so it can load the latest version of the YamlDotNet library from NuGet.
+
+Once the module is in place and working, you can execute code like this 
+[source,powershell]
+----
+[ordered]@{
+ Computername = $(Get-wmiobject win32_operatingsystem).csname
+ OS = $(Get-wmiobject win32_operatingsystem).caption
+ 'Uptime (hours)' = ((get-date) - ([wmiclass]"").ConvertToDateTime((Get-wmiobject win32_operatingsystem).LastBootUpTime)).Hours
+ Make = $(get-wmiobject win32_computersystem).model
+ Manufacturer = $(get-wmiobject win32_computersystem).manufacturer
+ 'Memory (Gb)' = $(Get-WmiObject win32_computersystem).TotalPhysicalMemory/1GB -as [int]
+ Processes = (Get-Process).Count
+ drives =  Get-WmiObject Win32_logicaldisk|select DeviceID, description
+ } |ConvertTo-YAML 
+----
+to give you a YAML representation of the data that is easy to assimilate.
+ 
+[source,yaml]
+----
+  Computername: 'LTANDREWC2' 
+  OS: 'Microsoft Windows 8.1 Enterprise' 
+  Uptime (hours): 21 
+  Make: 'Latitude E7440' 
+  Manufacturer: 'Dell Inc.' 
+  Memory (Gb): 8 
+  Processes: 169 
+  Drives: 
+  - 
+     DeviceID: 'C:' 
+     description: 'Local Fixed Disk' 
+  - 
+     DeviceID: 'K:' 
+     description: 'Network Connection' 
+  - 
+     DeviceID: 'L:' 
+     description: 'Network Connection' 
+  - 
+     DeviceID: 'M:' 
+     description: 'Network Connection' 
+  - 
+     DeviceID: 'N:' 
+     description: 'Network Connection' 
+  - 
+     DeviceID: 'P:' 
+     description: 'Network Connection' 
+  - 
+     DeviceID: 'S:' 
+     description: 'Network Connection'
+----
+Try it with something like `Format-table` and you'll probably agree that there is a place for rendering hierarchical information in a human-oriented way. 
 
 = YAML and PowerShell
 
@@ -96,68 +146,73 @@ And we can then create some simple functions
 [source,powershell]
 ----
 Function YAMLSerialize
-  {
-  [CmdletBinding()]
-  param
-  (
-     [object]$PowershellObject
-  )
-$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
-#ptions are None, Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+    {
+    [CmdletBinding()]
+    param
+    (
+    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    [object]$PowershellObject
+    )
+BEGIN { }
+PROCESS
+    {$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
+#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
 $stringBuilder = New-Object System.Text.StringBuilder
 $stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
-$Serializer.Serialize($stream,$PowershellObject) 
-$stream.ToString()
+$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+$stream.ToString()}
+END {}
 }
 
 Function YAMLDeserialize
 
-  {
-  [CmdletBinding()]
-  param
-  (
-     [string]$YAMLstring
-  )
-$stringReader = new-object System.IO.StringReader($YAMLstring)
+    {
+    [CmdletBinding()]
+    param
+    (
+        $YamlString
+    )
+$stringReader = new-object System.IO.StringReader([string]$yamlString)
 $Deserializer=New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
 $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
-} 
+}
+
 ----
 This will give us the basics. Naturally, there is a lot more we can, and will, do; but this will get you started. 
 
 Now we just want a simple YAML string to test out the plumbing.
 [source,powershell]
 ----
-  $yamlString =@"
-  invoice: !!int 34843
-  date  : 2001-01-23
-  approved: yes
-  bill-to: 
-    given : Chris
-    family : Dumars
-    address:
-      lines: |
-        458 Walkman Dr.
-        Suite #292
-      city  : Royal Oak
-      state  : MI
-      postal : 48046
-  ship-to: id001
-  product:
-    - sku     : BL394D
-     quantity  : 4
-     description : Basketball
-     price    : 450.00
-    - sku     : BL4438H
-     quantity  : 1
-     description : Super Hoop
-     price    : 2392.00
-  tax : 251.42
-  total: 4443.52
-  comments: >
-    Late afternoon is best.
-    Backup contact is Nancy
-    Billsmer @ 338-4338.
+    $YamlString =@"
+    invoice: !!int 34843
+    date   : 2001-01-23
+    approved: yes
+    bill-to: &id001
+        given  : Chris
+        family : Dumars
+        address:
+            lines: |
+                458 Walkman Dr.
+                Suite #292
+            city    : Royal Oak
+            state   : MI
+            postal  : 48046
+    ship-to: *id001
+    product:
+        - sku         : BL394D
+          quantity    : 4
+          description : Basketball
+          price       : 450.00
+        - sku         : BL4438H
+          quantity    : 1
+          description : Super Hoop
+          price       : 2392.00
+    tax  : 251.42
+    total: 4443.52
+    comments: >
+        Late afternoon is best.
+        Backup contact is Nancy
+        Billsmer @ 338-4338.
 
 "@ 
 ----
