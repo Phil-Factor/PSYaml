@@ -305,14 +305,39 @@ function ConvertFrom-YAMLDocument
 
 function ConvertFrom-YAML 
     {
+    [CmdletBinding()]
     param
     (
-        [string]$YamlString
+    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    $YamlString
     )
-    $stringReader = new-object System.IO.StringReader([string]$yamlString)
+BEGIN { }
+PROCESS
+    {$stringReader = new-object System.IO.StringReader([string]$yamlString)
     $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
     $yamlStream.Load([System.IO.TextReader]$stringReader)
-    ConvertFrom-YAMLDocument ($yamlStream.Documents[0])
+    ConvertFrom-YAMLDocument ($yamlStream.Documents[0])}
+END {}
+}
+
+
+Function JSONSerialize
+    {
+    [CmdletBinding()]
+    param
+    (
+    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    [object]$PowershellObject
+    )
+BEGIN { }
+PROCESS
+    {$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
+#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+$stringBuilder = New-Object System.Text.StringBuilder
+$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
+$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+$stream.ToString()}
+END {}
 }
 
 Function YAMLSerialize
@@ -320,29 +345,18 @@ Function YAMLSerialize
     [CmdletBinding()]
     param
     (
-         [object]$PowershellObject
+    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    [object]$PowershellObject
     )
-$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
+BEGIN { }
+PROCESS
+    {$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
 #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
 $stringBuilder = New-Object System.Text.StringBuilder
 $stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
 $Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
-$stream.ToString()
-}
-
-Function JSONSerialize
-    {
-    [CmdletBinding()]
-    param
-    (
-         [object]$PowershellObject
-    )
-$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
-#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
-$stringBuilder = New-Object System.Text.StringBuilder
-$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
-$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
-$stream.ToString()
+$stream.ToString()}
+END {}
 }
 
 Function YAMLDeserialize
@@ -351,36 +365,25 @@ Function YAMLDeserialize
     [CmdletBinding()]
     param
     (
-         [string]$YAMLstring
+        $YamlString
     )
-$stringReader = new-object System.IO.StringReader($YAMLstring)
+$stringReader = new-object System.IO.StringReader([string]$yamlString)
 $Deserializer=New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
 $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
 }
 
-Function YAMLSerialize
-    {
-    [CmdletBinding()]
-    param
-    (
-         [object]$PowershellObject
-    )
-$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
-#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
-$stringBuilder = New-Object System.Text.StringBuilder
-$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
-$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
-$stream.ToString()
-}
+
 
 Function Convert-YAMLtoJSON
-{
-    [CmdletBinding()]
+    {
     param
     (
-        [string]$YAMLstring
+    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
+    $YamlString
     )
-    $stringReader = new-object System.IO.StringReader($YAMLstring)
+BEGIN { }
+PROCESS
+    {$stringReader = new-object System.IO.StringReader([string]$yamlString)
     $Deserializer = New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
     $netObject = $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
     $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
@@ -388,7 +391,8 @@ Function Convert-YAMLtoJSON
     $stringBuilder = New-Object System.Text.StringBuilder
     $stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder
     $Serializer.Serialize($stream, $netObject) #
-    $stream.ToString()
+    $stream.ToString()}
+END {}
 }
 
 Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, JSONSerialize, Convert-YAMLtoJSON
