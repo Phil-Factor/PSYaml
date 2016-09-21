@@ -2,7 +2,7 @@
 
 <<<
 
-PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. You simply load the powershell file and the manifest into this directory 
+PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. To start, you can simply load the powershell file and the manifest into this directory or use a script that I provide in the next listing
 [source,powershell]
 ----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
@@ -10,13 +10,15 @@ $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml
 I do it, or update it via script like this
 [source,powershell]
 ----
-
-$YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\"
-if (!(test-path $YAMLDotNetLocation)) {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
-$client = new-object Net.WebClient
-$client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/blob/master/PSYaml.psd1', "$($YAMLDotNetLocation)PSYaml.psd1")
-$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/blob/master/PSYaml.psm1', "$($YAMLDotNetLocation)PSYaml.psm1")
+    Add-Type -assembly “system.io.compression.filesystem”
+    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\"
+    if (!(test-path $YAMLDotNetLocation)) {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
+    $client = new-object Net.WebClient
+    $client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    $client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip',"$($YAMLDotNetLocation)PSYAML.zip")
+    Remove-Item "$YAMLDotNetLocation\PSYaml-master\*.*"
+    [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
+    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation
 ----
 
 And then you can load it into your PowerShell like this. 
