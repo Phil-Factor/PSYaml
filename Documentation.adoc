@@ -2,12 +2,12 @@
 
 <<<
 
-PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. To start, you can simply load the powershell file and the manifest into this directory or use a script that I provide in the next listing
+PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. To start, you can simply load the PowerShell file and the manifest into this directory or use a script that I provide in the next listing
 [source,powershell]
 ----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
 ----
-I do it, or update it via script like this
+I do it, or update it, via a script like this
 [source,powershell]
 ----
     Add-Type -assembly "system.io.compression.filesystem"
@@ -129,7 +129,8 @@ And here is the same in JSON.
 
 I haven’t really the space in this article for the XML version. 
 
-YAML is officially now a superset of JSON, and so a YAML serializer can usually be persuaded to use the JSON ‘brackety’ style if you prefer, or require, that. 
+YAML is officially now a superset of JSON, and so a YAML serializer can usually be persuaded to use the JSON ‘brackety’ style if you prefer, or require, that. The PSYaml module has a function just to convert from the indented dialect of YAML to the 'Brackety' dialect aka JSON. Beware that not everything in YAML will convert to JSON so it is possible to get errors in consequence. 
+
 
 YAML also allows you to specify the data type of its values explicitly. If you wish to ensure that a datatype is read correctly, and Mr and Mrs Null will agree with me on this, you can precede the value with !!float, !!int, !!null, !!timestamp, !!bool, !!binary, !!Yaml or !!str. These are the most common YAML datatypes that you are likely to across, and any deserializer must cope with them. YAML also allows you to specify a data type that is specific to a particular language or framework, such as geographic coordinates. YAML also contains references, which refer to an existing element in the same document. So, if an element is repeated later in a YAML document, you can simply refer to the element using a short-hand name.
 
@@ -324,7 +325,7 @@ function ConvertFrom-YAMLDocument
   (
     [object]$TheNode #you pass in a node that, when you call it, will be the root node. 
   )
-  #initialise variables that are needed for providing the correct powershell data type for a string-based value.
+  #initialise variables that are needed for providing the correct PowerShell data type for a string-based value.
   [bool]$ABool = $false; [int]$AnInt = $null; [long]$ALong = $null; [decimal]$adecimal = $null; [single]$ASingle = $null;
   [double]$ADouble = $null; [datetime]$ADatetime = '1/1/2000';
   

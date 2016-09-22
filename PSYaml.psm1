@@ -22,10 +22,11 @@ function Initialize-PsYAML_Module
     (
         [boolean]$CheckForUpdate = $false
     )
+   
    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
    $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
     push-location #save the current location
-    Set-Location -Path $YAMLDotNetLocation #set the location in case we need an update
+    Set-Location -Path $YAMLDotNetLocation\YAMLdotNet #set the location in case we need an update
     if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet\YamlDotNet*"))
     {
         #Is it missing, or are we checking for an update?
@@ -40,7 +41,7 @@ function Initialize-PsYAML_Module
     #now get the latest version of YAMLdotNet that we have
     $CurrentRelease = Get-ChildItem | where { $_.PSIsContainer } | sort CreationTime -desc | select -f 1
     pop-location
-    Add-Type -Path "$YAMLDotNetLocation\$CurrentRelease\lib\dotnet\yamldotnet.dll"
+    Add-Type -Path "$YAMLDotNetLocation\YAMLDotNet\$CurrentRelease\lib\dotnet\yamldotnet.dll"
     
 }
 
