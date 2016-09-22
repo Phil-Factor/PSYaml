@@ -22,11 +22,11 @@ function Initialize-PsYAML_Module
     (
         [boolean]$CheckForUpdate = $false
     )
-    $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\YAMLdotNet"
+   $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
+   $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
     push-location #save the current location
     Set-Location -Path $YAMLDotNetLocation #set the location in case we need an update
-    if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet*"))
+    if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet\YamlDotNet*"))
     {
         #Is it missing, or are we checking for an update?
         if (-not (test-path "$($YAMLDotNetLocation)\nuget.exe")) # is nuget installed?
@@ -45,6 +45,28 @@ function Initialize-PsYAML_Module
 }
 
 Initialize-PsYAML_Module
+
+
+function Install-PSYamlModule
+{
+    [CmdletBinding()]
+    param ()
+    Add-Type -assembly "system.io.compression.filesystem"
+    # for the unzipping operation
+    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
+    # the location of the module
+    if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
+    { New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet" } #create the location
+    $client = new-object Net.WebClient #get a webclient to fetch the files
+    $client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    $client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip', "$($YAMLDotNetLocation)PSYAML.zip")
+    if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
+    { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master" -recurse -force }
+    [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
+    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into place
+}
+
+
 
 function ConvertTo-YAML
 {
