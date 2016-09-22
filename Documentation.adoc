@@ -10,15 +10,19 @@ $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml
 I do it, or update it via script like this
 [source,powershell]
 ----
-    Add-Type -assembly “system.io.compression.filesystem”
-    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml\"
-    if (!(test-path $YAMLDotNetLocation)) {New-Item -ItemType Directory -Force -Path $YAMLDotNetLocation}
-    $client = new-object Net.WebClient
+    Add-Type -assembly "system.io.compression.filesystem"
+    # for the unzipping operation
+    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
+    # the location of the module
+    if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
+      {New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet"} #create the location
+    $client = new-object Net.WebClient #get a webclient to fetch the files
     $client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
     $client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip',"$($YAMLDotNetLocation)PSYAML.zip")
-    Remove-Item "$YAMLDotNetLocation\PSYaml-master\*.*"
+    if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
+      { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master"-recurse -force}
     [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
-    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation
+    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into pleace
 ----
 
 And then you can load it into your PowerShell like this. 
@@ -46,10 +50,10 @@ to give you a YAML representation of the data that is easy to assimilate.
  
 [source,yaml]
 ----
-  Computername: 'LTANDREWC2' 
+  Computername: 'LTPFACTOR' 
   OS: 'Microsoft Windows 8.1 Enterprise' 
   Uptime (hours): 21 
-  Make: 'Latitude E7440' 
+  Make: 'Latitude E8770' 
   Manufacturer: 'Dell Inc.' 
   Memory (Gb): 8 
   Processes: 169 
@@ -78,13 +82,13 @@ to give you a YAML representation of the data that is easy to assimilate.
 ----
 Try it with something like `Format-table` and you'll probably agree that there is a place for rendering hierarchical information in a human-oriented way. 
 
-= YAML and PowerShell
+== YAML and PowerShell
 
 When you need to use structured data in PowerShell, you have to think of writing it out - serializing it – and reading it into an object– deserialising it. You’ll hear talk of serializing objects, but really, you’re only serializing the data within it, such as properties, lists, collections, dictionaries and so on, rather than the methods. In a compiled language, a serialized object can’t do anything for itself once it has been deserialised and re-serialised. It is just a container for data. PowerShell is unusual in that it can include scripts in objects, as ScriptMethods and ScriptProperties, so it is theoretically possible to transfer both between PowerShell applications, but this is out of the scope of this article.
 
 You’ve got some choice in PowerShell of how you serialize objects into structured documents, and back again. The two built-in formats are XML and JSON. I’ll be showing you how to get to use a third: YAML.
 
-= Why YAML?
+== Why YAML?
 
 You’d need a good reason for not using XML. It is the obvious format for juggling with data. PowerShell allows you to query it and treat it as an object. If you use XML Schemas, you have a very robust system.
 The downside of XML is that it is complex, arcane, and the XML documents can’t be easily read or altered by humans. It can take a long time to process.
@@ -302,7 +306,7 @@ $($BillTo.address.state)
 …and whatever else in terms of accessing the data via dot notation that you care to try. 
 The problem is that the YAML deserialiser creates NET objects, which is entirely correct and useful, but it is just more convenient to have PowerShell objects to make them full participants.
 
-= Refining the Deserializing process. 
+== Refining the Deserializing process. 
 
 Generally speaking, a good library for parsing and emitting data documents does so in two phases. The main work on a string containing XML, YAML, CSV or JSON is to create a representational model. The second phase is to turn that representational model into real data structures that are native to your computer language. 
 
