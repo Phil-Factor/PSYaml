@@ -2,12 +2,14 @@
 
 <<<
 
-PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to YAML documents and deserialize YAML documents to PowerShell objects. To start, you can simply load the PowerShell file and the manifest into this directory or use a script that I provide in the next listing
+PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to "YAML Ain't Markup Language" (YAML) documents and deserialize YAML documents to PowerShell objects. It uses http://aaubry.net[Antoine Aubry's] http://aaubry.net/pages/yamldotnet.html[excellent YamlDotNet library] 
+
+To start, you can simply load the PowerShell file and the manifest from its home on GitHub https://github.com/Phil-Factor/PSYaml[PSYaml] into this directory or use a script that I provide in the next listing
 [source,powershell]
 ----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
 ----
-I do it, or update it, via a script like this
+I do it, or update it, via a script like this.  
 [source,powershell]
 ----
     Add-Type -assembly "system.io.compression.filesystem"
@@ -24,8 +26,7 @@ I do it, or update it, via a script like this
     [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
     Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into pleace
 ----
-
-And then you can load it into your PowerShell like this. 
+Beware that you need to be clear about your  execution policy before you start and check the file before you load the module. Once you are ready, you can load the module into your PowerShell session like this. 
 [source,powershell]
 ----
 import-module psyaml 
@@ -131,6 +132,36 @@ I haven’t really the space in this article for the XML version.
 
 YAML is officially now a superset of JSON, and so a YAML serializer can usually be persuaded to use the JSON ‘brackety’ style if you prefer, or require, that. The PSYaml module has a function just to convert from the indented dialect of YAML to the 'Brackety' dialect aka JSON. Beware that not everything in YAML will convert to JSON so it is possible to get errors in consequence. 
 
+[source,powershell]
+----
+import-module psyaml
+Convert-YAMLtoJSON @"
+# Employee records
+-  phil:
+    name: Phil Factor
+    job: Developer
+    skills:
+      - SQL   
+      - python
+      - perl
+      - pascal
+-  derek:
+    name: Derek DBA
+    job: DBA
+    skills:
+      - TSQL
+      - fortran
+      - cobol
+"@
+----
+which will give ...
+
+[source,json]
+----
+
+[{"phil": {"name": "Phil Factor", "job": "Developer", "skills": ["SQL", "python", "perl", "pascal"]}}, {"derek": {"name": "Derek DBA", "job": "DBA", "skills": ["TSQL", "fortran", "cobol"]}}]
+
+----
 
 YAML also allows you to specify the data type of its values explicitly. If you wish to ensure that a datatype is read correctly, and Mr and Mrs Null will agree with me on this, you can precede the value with !!float, !!int, !!null, !!timestamp, !!bool, !!binary, !!Yaml or !!str. These are the most common YAML datatypes that you are likely to across, and any deserializer must cope with them. YAML also allows you to specify a data type that is specific to a particular language or framework, such as geographic coordinates. YAML also contains references, which refer to an existing element in the same document. So, if an element is repeated later in a YAML document, you can simply refer to the element using a short-hand name.
 
@@ -146,7 +177,7 @@ import-module psyaml
 
 and you will have a number of functions that you require.
 
-You don’t really need a special module, of course. Using YamlDotNet isn’t a big deal. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
+You don’t really need a special module, of course. Using YamlDotNet isn’t a big deal if you don't want to bother with PSYaml. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
 [source,powershell]
 ----
 nuget install yamldotnet 
@@ -197,7 +228,7 @@ $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
 }
 
 ----
-This will give us the basics. Naturally, there is a lot more we can, and will, do; but this will get you started. 
+This will give us the basics. Naturally, there is a lot more we can, and will, do; but this will get you started. Of course, this is all done for you in PSYaml and you can access these very functions. 
 
 Now we just want a simple YAML string to test out the plumbing.
 [source,powershell]
@@ -320,61 +351,63 @@ Here is a routine that takes as a parameter a representational model and convert
 ----
 function ConvertFrom-YAMLDocument
 {
-  [CmdletBinding()]
-  param
-  (
-    [object]$TheNode #you pass in a node that, when you call it, will be the root node. 
-  )
-  #initialise variables that are needed for providing the correct PowerShell data type for a string-based value.
-  [bool]$ABool = $false; [int]$AnInt = $null; [long]$ALong = $null; [decimal]$adecimal = $null; [single]$ASingle = $null;
-  [double]$ADouble = $null; [datetime]$ADatetime = '1/1/2000';
-  
-  $TheTypeOfNode = $TheNode.GetType().Name # determine this
-  Write-Verbose "$TheTypeOfNode = $($theNode)" #just so see what is going on
-   $Style = $TheNode.Style; $Tag = $TheNode.Tag; $Anchor = $TheNode.Anchor; 
-   Write-Verbose "Tag=$tag, Style=$style, Anchor=$anchor"  
-  if ($TheTypeOfNode -eq 'YamlDocument') #if it is the document, then call recursively with the rrot node
-  { $TheObject = ConvertFrom-YAMLDocument $TheNode.RootNode }
-  elseif ($TheTypeOfNode -eq 'YamlMappingNode') #ah mapping nodes 
-  {
-    $TheObject = [ordered]@{ }; $theNode |
-    foreach{ $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value; }
-  }
-  elseif ($TheTypeOfNode -eq 'YamlScalarNode' -or $TheTypeOfNode -eq 'Object[]')
-  {
-    $value = "$($theNode)"
-    if ($tag -eq $null)
-    {
-      $value = switch -Regex ($value)
-      {
-        # if it is one of the allowed boolean values
-        '(?i)\A(?:on|yes)\z' { 'true'; break } #Deal with all the possible YAML boolenas
-        '(?i)\A(?:off|no)\z' { 'false'; break }
-        default { $value }
-      };
-    };
+    [CmdletBinding()]
+    param
+    (
+        [object]$TheNode #you pass in a node that, when you call it, will be the root node. 
+    )
+    #initialise variables that are needed for providing the correct powershell data type for a string-based value.
+    [bool]$ABool = $false; [int]$AnInt = $null; [long]$ALong = $null; [decimal]$adecimal = $null; [single]$ASingle = $null;
+    [double]$ADouble = $null; [datetime]$ADatetime = '1/1/2000';
     
-    $TheObject =
-      if ($tag -ieq 'tag:yaml.org,2002:str') { [string]$Value } #it is specified as a string
-      elseif ($tag -ieq 'tag:yaml.org,2002:bool') { [bool]$Value } #it is specified as a boolean
-      elseif ($tag -ieq 'tag:yaml.org,2002:float') { [double]$Value } #it is specified as adouble
-      elseif ($tag -ieq 'tag:yaml.org,2002:int') { [int]$Value } #it is specified as a int
-      elseif ($tag -ieq 'tag:yaml.org,2002:null') { $null } #it is specified as a null
-      elseif ([int]::TryParse($Value, [ref]$AnInt)) { $AnInt } #is it a short integer
-      elseif ([bool]::TryParse($Value, [ref]$ABool)) { $ABool } #is it a boolean
-      elseif ([long]::TryParse($Value, [ref]$ALong)) { $ALong } #is it a long integer
-      elseif ([decimal]::TryParse($Value, [ref]$ADecimal)) { $ADecimal } #is it a decimal
-      elseif ([single]::TryParse($Value, [ref]$ASingle)) { $ASingle } #is it a single float
-      elseif ([double]::TryParse($Value, [ref]$ADouble)) { $ADouble } #is it a double float
-      elseif ([datetime]::TryParse($Value, [ref]$ADatetime)) { $ADatetime } #is it a datetime
-      else { [string]$Value }    
-  }
-  elseif ($TheTypeOfNode -eq 'Object[]') #sometimes you just get a raw object, not a node
-  { $TheObject = $theNode.Value } #so you return its value
-  elseif ($TheTypeOfNode -eq 'YamlSequenceNode') #in which case you 
-  { $TheObject = @(); $theNode | foreach{ $TheObject += ConvertFrom-YAMLDocument $_ } }
-  else { Write-Verbose "Unrecognised token $TheTypeOfNode" }
-  $TheObject
+    $TheTypeOfNode = $TheNode.GetType().Name # determine this
+    Write-Verbose "$TheTypeOfNode = $($theNode)" #just so see what is going on
+     $Style = $TheNode.Style; $Tag = $TheNode.Tag; $Anchor = $TheNode.Anchor; 
+     Write-Verbose "Tag=$tag, Style=$style, Anchor=$anchor"    
+    if ($TheTypeOfNode -eq 'YamlDocument') #if it is the document, then call recursively with the rrot node
+    { $TheObject = ConvertFrom-YAMLDocument $TheNode.RootNode }
+    elseif ($TheTypeOfNode -eq 'YamlMappingNode') #ah mapping nodes 
+    {
+        $TheObject = [ordered]@{ }; $theNode |
+        foreach{ $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value; }
+    }
+    elseif ($TheTypeOfNode -eq 'YamlScalarNode' -or $TheTypeOfNode -eq 'Object[]')
+    {
+        $value = "$($theNode)"
+        if ($tag -eq $null)
+        {
+            $value = switch -Regex ($value)
+            {
+                # if it is one of the allowed boolean values
+                '(?i)\A(?:on|yes)\z' { 'true'; break } #Deal with all the possible YAML boolenas
+                '(?i)\A(?:off|no)\z' { 'false'; break }
+                default { $value }
+            };
+        };
+        
+        $TheObject =
+            if ($tag -ieq 'tag:yaml.org,2002:str') { [string]$Value } #it is specified as a string
+            elseif ($tag -ieq 'tag:yaml.org,2002:bool') { [bool]$Value } #it is specified as a boolean
+            elseif ($tag -ieq 'tag:yaml.org,2002:float') { [double]$Value } #it is specified as adouble
+            elseif ($tag -ieq 'tag:yaml.org,2002:int') { [int]$Value } #it is specified as a int
+            elseif ($tag -ieq 'tag:yaml.org,2002:null') { $null } #it is specified as a null
+            elseif ($tag -ieq 'tag:yaml.org,2002:timestamp') {[datetime]$Value} #it is date/timestamp
+            elseif ($tag -ieq 'tag:yaml.org,2002:binary') {[System.Convert]::FromBase64String($Value)}
+            elseif ([int]::TryParse($Value, [ref]$AnInt)) { $AnInt } #is it a short integer
+            elseif ([bool]::TryParse($Value, [ref]$ABool)) { $ABool } #is it a boolean
+            elseif ([long]::TryParse($Value, [ref]$ALong)) { $ALong } #is it a long integer
+            elseif ([decimal]::TryParse($Value, [ref]$ADecimal)) { $ADecimal } #is it a decimal
+            elseif ([single]::TryParse($Value, [ref]$ASingle)) { $ASingle } #is it a single float
+            elseif ([double]::TryParse($Value, [ref]$ADouble)) { $ADouble } #is it a double float
+            elseif ([datetime]::TryParse($Value, [ref]$ADatetime)) { $ADatetime } #is it a datetime
+            else { [string]$Value }        
+    }
+    elseif ($TheTypeOfNode -eq 'Object[]') #sometimes you just get a raw object, not a node
+    { $TheObject = $theNode.Value } #so you return its value
+    elseif ($TheTypeOfNode -eq 'YamlSequenceNode') #in which case you 
+    { $TheObject = @(); $theNode | foreach{ $TheObject += ConvertFrom-YAMLDocument $_ } }
+    else { Write-Verbose "Unrecognised token $TheTypeOfNode" }
+    $TheObject
 } 
 ----
 In order to use this, all you need to do is to load the text of the YAML document into a YAML stream.
@@ -395,8 +428,12 @@ Last but most important, I wanted a way of loading a third party .net library in
 ----
 Initialize-PsYAML_Module $True
 ----
+== So what is the point of all this?
+Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to http://www.yaml.org/type[specify your data type]. You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of http://www.yaml.org/type/timestamp.html[timestamp], http://www.yaml.org/type/binary.html[binary], http://www.yaml.org/type/str.html[str], http://www.yaml.org/type/bool.html[bool], http://www.yaml.org/type/float.html[float], http://www.http://yaml.org/type/int.html[int] and http://www.yaml.org/type/null.html[null]. if there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
 
+YAML also has a rather crude way of allowing you to represent relational data by means of http://www.yaml.org/spec/1.2/spec.html#node//[node] Anchors. These A have an '&' prefix. An http://www.yaml.org/spec/1.2/spec.html#alias//[alias node] can then be used to indicate additional inclusions of the anchored node. It means that you don't have to repeat nodes in a document. You just write it once and then refer to the node by its anchor.
 
+I find YAML to be very useful. What really convinces me of the power of YAML is to be able to walk the representational model to do special-purpose jobs such as processing hierarchical data to load into SQL. It is at that point that I finally decided that YAML had a lot going for it as a format of data document. 
 
 
 

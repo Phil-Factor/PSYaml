@@ -309,6 +309,8 @@ function ConvertFrom-YAMLDocument
             elseif ($tag -ieq 'tag:yaml.org,2002:float') { [double]$Value } #it is specified as adouble
             elseif ($tag -ieq 'tag:yaml.org,2002:int') { [int]$Value } #it is specified as a int
             elseif ($tag -ieq 'tag:yaml.org,2002:null') { $null } #it is specified as a null
+            elseif ($tag -ieq 'tag:yaml.org,2002:timestamp') {[datetime]$Value} #it is date/timestamp
+            elseif ($tag -ieq 'tag:yaml.org,2002:binary') {[System.Convert]::FromBase64String("SGVsbG8gV29ybGQ=")}
             elseif ([int]::TryParse($Value, [ref]$AnInt)) { $AnInt } #is it a short integer
             elseif ([bool]::TryParse($Value, [ref]$ABool)) { $ABool } #is it a boolean
             elseif ([long]::TryParse($Value, [ref]$ALong)) { $ALong } #is it a long integer
@@ -419,3 +421,5 @@ END {}
 }
 
 Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, JSONSerialize, Convert-YAMLtoJSON
+$b  = [System.Convert]::FromBase64String("SGVsbG8gV29ybGQ=")
+$b|gm
