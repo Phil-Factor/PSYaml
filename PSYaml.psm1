@@ -121,10 +121,10 @@ function ConvertTo-YAML
                 { $Type = 'XML' }
             } # convert to PS Alias
             # prevent these values being identified as an object
-            if (@('boolean', 'byte', 'char', 'datetime', 'decimal', 'double', 'float', 'single', 'guid', 'int', 'int32',
-            'int16', 'long', 'int64', 'OutOfDepth', 'RuntimeType', 'PSNoteProperty', 'regex', 'sbyte', 'string',
-            'timespan', 'uint16', 'uint32', 'uint64', 'uri', 'version', 'void', 'xml', 'datatable', 'Dictionary`2',
-            'SqlDataReader', 'datarow', 'ScriptBlock', 'type') -notcontains $type)
+            if (@('boolean', 'byte', 'byte[]', 'char', 'datetime', 'decimal', 'double', 'float', 'single', 'guid', 'int', 'int32',
+                    'int16', 'long', 'int64', 'OutOfDepth', 'RuntimeType', 'PSNoteProperty', 'regex', 'sbyte', 'string',
+                    'timespan', 'uint16', 'uint32', 'uint64', 'uri', 'version', 'void', 'xml', 'datatable', 'Dictionary`2',
+                    'SqlDataReader', 'datarow', 'ScriptBlock', 'type') -notcontains $type)
             {
                 if ($Type -ieq 'OrderedDictionary') { $Type = 'HashTable' }
                 elseif ($Type -ieq 'PSCustomObject') { $Type = 'PSObject' } #
@@ -132,7 +132,7 @@ function ConvertTo-YAML
                 elseif ($inputObject -is "Array") { $Type = 'Array' } # whatever it thinks it is called
                 elseif ($inputObject -is "HashTable") { $Type = 'HashTable' } # for our purposes it is a hashtable
                 elseif (($inputObject | gm -membertype Properties |
-                Select name | Where name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
+                        Select name | Where name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
                 elseif (($inputObject | gm -membertype Properties | Select name).count -gt 1) { $Type = 'Object' }
             }
             write-verbose "$($padding)Type:='$Type', Object type:=$($inputObject.GetType().Name), BaseName:=$($inputObject.GetType().BaseType.Name) "
@@ -142,11 +142,30 @@ function ConvertTo-YAML
                 'ScriptBlock'{ "{$($inputObject.ToString())}" }
                 'InnerXML'        { "|`r`n" + ($inputObject.OuterXMl.Split("`r`n") | foreach{ "$padding$_`r`n" }) }
                 'DateTime'   { $inputObject.ToString('s') } # s=SortableDateTimePattern (based on ISO 8601) using local time
+                'Byte[]'     {
+                    $string = [System.Convert]::ToBase64String($inputObject)
+                    if ($string.Length -gt 100)
+                    {
+                        # right, we have to format it to YAML spec.
+                        '!!binary "\'+ "`r`n" # signal that we are going to use the readable Base64 string format
+                        $bits = @(); $length = $string.Length; $IndexIntoString = 0; $wrap = 100
+                        while ($length -gt $IndexIntoString + $Wrap)
+                        {
+                            $padding + $string.Substring($IndexIntoString, $wrap).Trim() + "`r`n"
+                            $IndexIntoString += $wrap
+                        }
+                        if ($IndexIntoString -lt $length) { $padding + $string.Substring($IndexIntoString).Trim() + "`r`n" }
+                        else { "`r`n" }
+                    }
+                    
+                    else { '!!binary "' + $($string -replace '''', '''''') + '"' }
+                    
+                }
                 'Boolean' {
                     "$(&{
-                        if ($inputObject -eq $true) { 'true' }
-                        Else { 'false' }
-                    })"
+                            if ($inputObject -eq $true) { 'true' }
+                            Else { 'false' }
+                        })"
                 }
                 'string' {
                     $String = "$inputObject"
@@ -177,22 +196,22 @@ function ConvertTo-YAML
                 'Char'     { "([int]$inputObject)" }
                 {
                     @('byte', 'decimal', 'double', 'float', 'single', 'int', 'int32', 'int16', `
-                    'long', 'int64', 'sbyte', 'uint16', 'uint32', 'uint64') -contains $_
+                        'long', 'int64', 'sbyte', 'uint16', 'uint32', 'uint64') -contains $_
                 }
                 { "$inputObject" } # rendered as is without single quotes
                 'PSNoteProperty' { "$(ConvertTo-YAML -inputObject $inputObject.Value -depth $depth -NestingLevel ($NestingLevel + 1))" }
                 'Array'    { "$($inputObject | ForEach { "`r`n$padding- $(ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
                 'HashTable'{
                     ("$($inputObject.GetEnumerator() | ForEach {
-                        "`r`n$padding  $($_.Name): " +
-                        (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
-                    })")
+                                "`r`n$padding  $($_.Name): " +
+                                (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
+                            })")
                 }
                 'Dictionary`2'{
                     ("$($inputObject.GetEnumerator() | ForEach {
-                        "`r`n$padding  $($_.Key): " +
-                        (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
-                    })")
+                                "`r`n$padding  $($_.Key): " +
+                                (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
+                            })")
                 }
                 'PSObject' { ("$($inputObject.PSObject.Properties | ForEach { "`r`n$padding $($_.Name): " + (ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1)) })") }
                 'generic'  { "$($inputObject.Keys | ForEach { "`r`n$padding  $($_):  $(ConvertTo-YAML -inputObject $inputObject.$_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
@@ -212,6 +231,7 @@ function ConvertTo-YAML
     
     END { }
 }
+
 
  
 	
