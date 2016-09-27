@@ -177,7 +177,7 @@ import-module psyaml
 
 and you will have a number of functions that you require.
 
-You don’t really need a special module, of course. Using YamlDotNet isn’t a big deal if you don't want to bother with PSYaml. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
+You don’t really need a special module, of course. Using YamlDotNet directly isn’t a big deal if you don't want to bother with PSYaml. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
 [source,powershell]
 ----
 nuget install yamldotnet 
@@ -427,6 +427,71 @@ Last but most important, I wanted a way of loading a third party .net library in
 [source,powershell]
 ----
 Initialize-PsYAML_Module $True
+----
+
+== Simple Example of use
+Here is a way of producing a YAML result from any SQL expression on a database
+
+[source,powershell]
+----
+import-module psyaml
+$SourceTable = 'production.location'
+$Sourceinstance = 'YourInstanceName'
+$Sourcedatabase = 'Adventureworks'
+
+$SourceConnectionString = "Data Source=$Sourceinstance;Initial Catalog=$Sourcedatabase;Integrated Security=True"
+$sql = "select * FROM $SourceTable"
+$result = @()
+try
+{
+    $sourceConnection = New-Object System.Data.SqlClient.SQLConnection($SourceConnectionString)
+    $sourceConnection.open()
+    $commandSourceData = New-Object system.Data.SqlClient.SqlCommand($sql, $sourceConnection)
+    $reader = $commandSourceData.ExecuteReader()
+    $Counter = $Reader.FieldCount
+    while ($Reader.Read())
+    {
+        $tuple = @{ }
+        for ($i = 0; $i -lt $Counter; $i++)
+        {
+        $tuple."$($Reader.GetName($i))" = "$(if ($Reader.GetFieldType($i).Name -eq 'DateTime')
+                { $Reader.GetDateTime($i) }
+                else { $Reader.GetValue($i) })";
+        }
+        $Result += $tuple
+    }
+    YAMLSerialize $result
+}
+catch
+{
+    $ex = $_.Exception
+    Write-Error "whilst opening source $Sourceinstance . $Sourcedatabase . $SourceTable : $ex.Message"
+}
+finally
+{
+    $reader.close()
+}
+----
+This will give the result (just the first three rows)
+
+[source,powershell]
+----
+- CostRate: 0.0000
+  ModifiedDate: 06/01/1998 00:00:00
+  Name: Tool Crib
+  Availability: 0.00
+  LocationID: 1
+- CostRate: 0.0000
+  ModifiedDate: 06/01/1998 00:00:00
+  Name: Sheet Metal Racks
+  Availability: 0.00
+  LocationID: 2
+- CostRate: 0.0000
+  ModifiedDate: 06/01/1998 00:00:00
+  Name: Paint Shop
+  Availability: 0.00
+  LocationID: 3
+#and so on...  
 ----
 == So what is the point of all this?
 Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to http://www.yaml.org/type[specify your data type]. You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of http://www.yaml.org/type/timestamp.html[timestamp], http://www.yaml.org/type/binary.html[binary], http://www.yaml.org/type/str.html[str], http://www.yaml.org/type/bool.html[bool], http://www.yaml.org/type/float.html[float], http://www.http://yaml.org/type/int.html[int] and http://www.yaml.org/type/null.html[null]. if there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
