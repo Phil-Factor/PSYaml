@@ -105,7 +105,7 @@ function ConvertTo-YAML
     BEGIN { }
     PROCESS
     {
-        If ($inputObject -eq $Null) { $p += 'null'; return $p } # if it is null return null
+        If ($inputObject -eq $null -and !($inputObject -ne $null)) { $p += 'null'; return $p } # if it is null return null
         if ($NestingLevel -eq 0) { '---' }
         
         $padding = [string]'  ' * $NestingLevel # lets just create our left-padding for the block
@@ -147,7 +147,7 @@ function ConvertTo-YAML
                     if ($string.Length -gt 100)
                     {
                         # right, we have to format it to YAML spec.
-                        '!!binary "\'+ "`r`n" # signal that we are going to use the readable Base64 string format
+                        '!!binary "\' + "`r`n" # signal that we are going to use the readable Base64 string format
                         $bits = @(); $length = $string.Length; $IndexIntoString = 0; $wrap = 100
                         while ($length -gt $IndexIntoString + $Wrap)
                         {
@@ -172,24 +172,25 @@ function ConvertTo-YAML
                     if ($string -match '[\r\n]' -or $string.Length -gt 80)
                     {
                         # right, we have to format it to YAML spec.
-                        ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
+                        $folded = ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
                         $string.Split("`n") | foreach {
-                            $bits = @(); $length = $_.Length; $IndexIntoString = 0; $wrap = 80
+                            $length = $_.Length; $IndexIntoString = 0; $wrap = 80
                             while ($length -gt $IndexIntoString + $Wrap)
                             {
+                                $breakpoint = $wrap
                                 $earliest = $_.Substring($IndexIntoString, $wrap).LastIndexOf(' ')
                                 $latest = $_.Substring($IndexIntoString + $wrap).IndexOf(' ')
-                                $BreakPoint = &{
-                                    if ($earliest -gt ($wrap + $latest)) { $earliest }
-                                    else { $wrap + $latest }
-                                }
-                                if ($earliest -lt (($BreakPoint * 10)/100)) { $BreakPoint = $wrap } # in case it is a string without spaces
-                                $padding + $_.Substring($IndexIntoString, $BreakPoint).Trim() + "`r`n"
+                                if (($earliest -eq -1) -or ($latest -eq -1)) { $breakpoint = $wrap }
+                                elseif ($wrap - $earliest -lt ($latest)) { $BreakPoint = $earliest }
+                                else { $BreakPoint = $wrap + $latest }
+                                if (($wrap - $earliest) + $latest -gt 30) { $BreakPoint = $wrap } # in case it is a string without spaces
+                                $folded += $padding + $_.Substring($IndexIntoString, $BreakPoint).Trim() + "`r`n"
                                 $IndexIntoString += $BreakPoint
                             }
-                            if ($IndexIntoString -lt $length) { $padding + $_.Substring($IndexIntoString).Trim() + "`r`n" }
-                            else { "`r`n" }
+                            if ($IndexIntoString -lt $length) { $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n" }
+                            else { $folded += "`r`n`r`n" }
                         }
+                        $folded
                     }
                     else { "'$($string -replace '''', '''''')'" }
                 }
@@ -231,6 +232,7 @@ function ConvertTo-YAML
     
     END { }
 }
+
 
 
  
