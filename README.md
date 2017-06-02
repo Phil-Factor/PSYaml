@@ -15,7 +15,7 @@ Please note that the **Master** branch has the latest, ready-for-production vers
 * Add automatic testing of all public functions
 
 ## Example Usage
-``` Language-PowerShell
+```PowerShell
 import-module psyaml
 $yaml = @"
 anArray:
