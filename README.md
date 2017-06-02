@@ -1,4 +1,4 @@
-<img src=".\Media\YAML_PS.svg" height="200" align="right" />
+<img src=".\Media\YAML_PS.png" height="200" align="right" />
 
 # PSYaml
 
