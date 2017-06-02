@@ -7,7 +7,7 @@ function ConvertTo-Yaml
    This produces YAML from any object you pass to it. It isn't suitable for the huge objects produced by some of the cmdlets such as Get-Process, but fine for simple objects
  .EXAMPLE
    $array=@()
-   $array+=Get-Process wi* |  Select-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
+   $array+=Get-Process wi* |  Select-Object-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
    ConvertTo-YAML $array
 
  .PARAMETER Object 
@@ -60,16 +60,16 @@ function ConvertTo-Yaml
                 elseif ($Type -ieq 'List`1') { $Type = 'Array' }
                 elseif ($inputObject -is "Array") { $Type = 'Array' } # whatever it thinks it is called
                 elseif ($inputObject -is "HashTable") { $Type = 'HashTable' } # for our purposes it is a hashtable
-                elseif (($inputObject | gm -membertype Properties |
-                        Select name | Where name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
-                elseif (($inputObject | gm -membertype Properties | Select name).count -gt 1) { $Type = 'Object' }
+                elseif (($inputObject | Get-Member -membertype Properties |
+                        Select-Object name | Where-Object name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
+                elseif (($inputObject | Get-Member -membertype Properties | Select-Object name).count -gt 1) { $Type = 'Object' }
             }
             write-verbose "$($padding)Type:='$Type', Object type:=$($inputObject.GetType().Name), BaseName:=$($inputObject.GetType().BaseType.Name) "
             
             switch ($Type)
             {
                 'ScriptBlock'{ "{$($inputObject.ToString())}" }
-                'InnerXML'        { "|`r`n" + ($inputObject.OuterXMl.Split("`r`n") | foreach{ "$padding$_`r`n" }) }
+                'InnerXML'        { "|`r`n" + ($inputObject.OuterXMl.Split("`r`n") | ForEach-Object{ "$padding$_`r`n" }) }
                 'DateTime'   { $inputObject.ToString('s') } # s=SortableDateTimePattern (based on ISO 8601) using local time
                 'Byte[]'     {
                     $string = [System.Convert]::ToBase64String($inputObject)
@@ -102,7 +102,7 @@ function ConvertTo-Yaml
                     {
                         # right, we have to format it to YAML spec.
                         $folded = ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
-                        $string.Split("`n") | foreach {
+                        $string.Split("`n") | ForEach-Object {
                             $length = $_.Length; $IndexIntoString = 0; $wrap = 80
                             while ($length -gt $IndexIntoString + $Wrap)
                             {
@@ -130,24 +130,24 @@ function ConvertTo-Yaml
                 }
                 { "$inputObject" } # rendered as is without single quotes
                 'PSNoteProperty' { "$(ConvertTo-YAML -inputObject $inputObject.Value -depth $depth -NestingLevel ($NestingLevel + 1))" }
-                'Array'    { "$($inputObject | ForEach { "`r`n$padding- $(ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
+                'Array'    { "$($inputObject | Foreach-Object { "`r`n$padding- $(ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
                 'HashTable'{
-                    ("$($inputObject.GetEnumerator() | ForEach {
+                    ("$($inputObject.GetEnumerator() | Foreach-Object {
                                 "`r`n$padding  $($_.Name): " +
                                 (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
                             })")
                 }
                 'Dictionary`2'{
-                    ("$($inputObject.GetEnumerator() | ForEach {
+                    ("$($inputObject.GetEnumerator() | Foreach-Object {
                                 "`r`n$padding  $($_.Key): " +
                                 (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
                             })")
                 }
-                'PSObject' { ("$($inputObject.PSObject.Properties | ForEach { "`r`n$padding $($_.Name): " + (ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1)) })") }
-                'generic'  { "$($inputObject.Keys | ForEach { "`r`n$padding  $($_):  $(ConvertTo-YAML -inputObject $inputObject.$_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
-                'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | ForEach { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
-                'XML'   { ("$($inputObject | Get-Member -membertype properties | where-object { @('xml', 'schema') -notcontains $_.name } | Select-Object name | ForEach { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
-                'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | ForEach { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
+                'PSObject' { ("$($inputObject.PSObject.Properties | Foreach-Object { "`r`n$padding $($_.Name): " + (ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1)) })") }
+                'generic'  { "$($inputObject.Keys | Foreach-Object { "`r`n$padding  $($_):  $(ConvertTo-YAML -inputObject $inputObject.$_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
+                'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
+                'XML'   { ("$($inputObject | Get-Member -membertype properties | Where-Object-object { @('xml', 'schema') -notcontains $_.name } | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
+                'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
                 #  'SqlDataReader'{$all = $inputObject.FieldCount; while ($inputObject.Read()) {for ($i = 0; $i -lt $all; $i++) {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
                 default { "'$inputObject'" }
             }

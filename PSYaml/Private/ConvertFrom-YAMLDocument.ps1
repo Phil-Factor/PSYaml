@@ -62,33 +62,49 @@ function ConvertFrom-YAMLDocument
         [object]$TheNode #you pass in a node that, when you call it, will be the root node. 
     )
     #initialise variables that are needed for providing the correct powershell data type for a string-based value.
-    [bool]$ABool = $false; [int]$AnInt = $null; [long]$ALong = $null; [decimal]$adecimal = $null; [single]$ASingle = $null;
-    [double]$ADouble = $null; [datetime]$ADatetime = '1/1/2000';
+    [bool]$ABool       = $false
+    [int]$AnInt        = $null
+    [long]$ALong       = $null
+    [decimal]$adecimal = $null
+    [single]$ASingle   = $null
+    [double]$ADouble   = $null
+    [datetime]$ADatetime = '1/1/2000'
     
     $TheTypeOfNode = $TheNode.GetType().Name # determine this
     Write-Verbose "$TheTypeOfNode = $($theNode)" #just so see what is going on
-     $Style = $TheNode.Style; $Tag = $TheNode.Tag; $Anchor = $TheNode.Anchor; 
+     $Style = $TheNode.Style
+     $Tag = $TheNode.Tag
+     $Anchor = $TheNode.Anchor
+
      Write-Verbose "Tag=$tag, Style=$style, Anchor=$anchor"    
     if ($TheTypeOfNode -eq 'YamlDocument') #if it is the document, then call recursively with the rrot node
     { $TheObject = ConvertFrom-YAMLDocument $TheNode.RootNode }
     elseif ($TheTypeOfNode -eq 'YamlMappingNode') #ah mapping nodes 
     {
-        $TheObject = [ordered]@{ }; $theNode |
-        foreach{ $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value; }
+        $TheObject = [ordered]@{ }
+        $theNode |
+        ForEach-Object{ $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value
+        }
     }
     elseif ($TheTypeOfNode -eq 'YamlScalarNode' -or $TheTypeOfNode -eq 'Object[]')
     {
         $value = "$($theNode)"
-        if ($tag -eq $null)
+        if (! $tag)
         {
             $value = switch -Regex ($value)
             {
                 # if it is one of the allowed boolean values
-                '(?i)\A(?:on|yes)\z' { 'true'; break } #Deal with all the possible YAML boolenas
-                '(?i)\A(?:off|no)\z' { 'false'; break }
+                '(?i)\A(?:on|yes)\z' { 'true'
+                                        break
+                                     } #Deal with all the possible YAML boolenas
+                '(?i)\A(?:off|no)\z' { 'false'
+                                        break
+                                     }
                 default { $value }
-            };
-        };
+            }
+
+        }
+
         
         $TheObject =
             if ($tag -ieq 'tag:yaml.org,2002:str') { [string]$Value } #it is specified as a string
@@ -110,7 +126,8 @@ function ConvertFrom-YAMLDocument
     elseif ($TheTypeOfNode -eq 'Object[]') #sometimes you just get a raw object, not a node
     { $TheObject = $theNode.Value } #so you return its value
     elseif ($TheTypeOfNode -eq 'YamlSequenceNode') #in which case you 
-    { $TheObject = @(); $theNode | foreach{ $TheObject += ConvertFrom-YAMLDocument $_ } }
+    { $TheObject = @()
+        $theNode | ForEach-Object{ $TheObject += ConvertFrom-YAMLDocument $_ } }
     else { Write-Verbose "Unrecognised token $TheTypeOfNode" }
     $TheObject
 }
