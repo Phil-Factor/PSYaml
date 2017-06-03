@@ -5,10 +5,8 @@ $ModuleName = "PSYaml"
 $InstallPath = $env:PSModulePath.split(";") | Where-Object {$_ -match "My Documents" -or $_ -match "Documents"}
 
 # Specify deploy task
-Deploy "Install $ModuleName"
-{
-    By Filesystem
-    {
+Deploy "Install $ModuleName" {
+    By Filesystem {
         FromSource $ModuleName
         To "$($InstallPath)\$($ModuleName)"
         WithOptions @{
