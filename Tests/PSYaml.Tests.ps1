@@ -8,7 +8,7 @@ $PSVersion = $PSVersionTable.PSVersion.Major
 Import-Module $PSScriptRoot\..\$ModuleName\$ModuleName.psm1 -Force
 
 # Specify ScriptAnalyzer rules to exclude when testing
-$RulesToExclude = ""
+$RulesToExclude = "PSUseDeclaredVarsMoreThanAssignments"
 
 ## Begin our tests!
 
@@ -28,7 +28,7 @@ Describe "Should pass Script Analyzer PS$PSVersion Integrations tests" {
             {
                 $Output = Invoke-ScriptAnalyzer -Path $PSScriptRoot\..\$ModuleName -Recurse
             }
-            $Output | Should be $null
+            $Output | Select-Object RuleName, Severity, ScriptName, Line, Message | Should be $null
         }
     }
 }
