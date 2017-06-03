@@ -35,7 +35,11 @@ function ConvertTo-Yaml
     BEGIN { }
     PROCESS
     {
-        If ($inputObject -eq $null -and !($inputObject -ne $null)) { $p += 'null'; return $p } # if it is null return null
+        If ( $inputObject -eq $null -and !($inputObject -ne $null) )
+        {
+            $p += 'null'
+            return $p
+        } # if it is null return null
         if ($NestingLevel -eq 0) { '---' }
         
         $padding = [string]'  ' * $NestingLevel # lets just create our left-padding for the block
@@ -78,7 +82,10 @@ function ConvertTo-Yaml
                     {
                         # right, we have to format it to YAML spec.
                         '!!binary "\' + "`r`n" # signal that we are going to use the readable Base64 string format
-                        $bits = @(); $length = $string.Length; $IndexIntoString = 0; $wrap = 100
+                        $bits = @()
+                        $length = $string.Length
+                        $IndexIntoString = 0
+                        $wrap = 100
                         while ($length -gt $IndexIntoString + $Wrap)
                         {
                             $padding + $string.Substring($IndexIntoString, $wrap).Trim() + "`r`n"
@@ -104,7 +111,9 @@ function ConvertTo-Yaml
                         # right, we have to format it to YAML spec.
                         $folded = ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
                         $string.Split("`n") | ForEach-Object {
-                            $length = $_.Length; $IndexIntoString = 0; $wrap = 80
+                            $length = $_.Length
+                            $IndexIntoString = 0
+                            $wrap = 80
                             while ($length -gt $IndexIntoString + $Wrap)
                             {
                                 $breakpoint = $wrap
@@ -149,7 +158,12 @@ function ConvertTo-Yaml
                 'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
                 'XML'   { ("$($inputObject | Get-Member -membertype properties | Where-Object-object { @('xml', 'schema') -notcontains $_.name } | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
                 'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
-                #  'SqlDataReader'{$all = $inputObject.FieldCount; while ($inputObject.Read()) {for ($i = 0; $i -lt $all; $i++) {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
+                <# 
+                'SqlDataReader'{$all = $inputObject.FieldCount
+                    while ($inputObject.Read()) {for ($i = 0
+                    $i -lt $all
+                    $i++) {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
+                #>
                 default { "'$inputObject'" }
             }
         }
