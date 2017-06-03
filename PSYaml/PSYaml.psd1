@@ -33,7 +33,7 @@ Copyright = '(c) 2017 Phil-Factor, Pezhore. All rights reserved.'
 Description = 'PowerShell module used to intrepret Yaml formatted strings'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3'
+PowerShellVersion = '2.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -42,10 +42,10 @@ PowerShellVersion = '3'
 # PowerShellHostVersion = ''
 
 # Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-# DotNetFrameworkVersion = ''
+DotNetFrameworkVersion = '4.0'
 
 # Minimum version of the common language runtime (CLR) required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
-# CLRVersion = ''
+CLRVersion = '2.0.50727'
 
 # Processor architecture (None, X86, Amd64) required by this module
 # ProcessorArchitecture = ''
