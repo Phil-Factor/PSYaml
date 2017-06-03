@@ -88,10 +88,10 @@ AliasesToExport = @()
 
 # List of all files packaged with this module
 FileList = @(
-             "PSYaml.psd1","PSYaml.psm1","about_PSYaml.help.txt","YamlDotNet.dll", 
-             "ConvertFrom-YAMLDocument.ps1","JSONSerialize.ps1","YAMLDeserialize.ps1",
-             "YAMLSerialize.ps1","Convert-YamlToJson.ps1","ConvertFrom-Yaml.ps1",
-             "ConvertTo-Yaml.ps1"
+             'PSYaml.psd1','PSYaml.psm1','about_PSYaml.help.txt','YamlDotNet.dll', 
+             'ConvertFrom-YAMLDocument.ps1','JSONSerialize.ps1','YAMLDeserialize.ps1',
+             'YAMLSerialize.ps1','Convert-YamlToJson.ps1','ConvertFrom-Yaml.ps1',
+             'ConvertTo-Yaml.ps1'
             )
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
