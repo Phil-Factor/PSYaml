@@ -35,39 +35,76 @@ function ConvertTo-Yaml
     BEGIN { }
     PROCESS
     {
-        If ( $inputObject -eq $null -and !($inputObject -ne $null) )
+        # if it is null return null
+        If ( !($inputObject) )
         {
             $p += 'null'
             return $p
-        } # if it is null return null
+        } 
+
         if ($NestingLevel -eq 0) { '---' }
         
         $padding = [string]'  ' * $NestingLevel # lets just create our left-padding for the block
         try
         {
             $Type = $inputObject.GetType().Name # we start by getting the object's type
-            if ($Type -ieq 'Object[]') { $Type = "$($inputObject.GetType().BaseType.Name)" } #what it really is
-            if ($depth -ilt $NestingLevel) { $Type = 'OutOfDepth' } #report the leaves in terms of object type
+            if ($Type -ieq 'Object[]')
+            { 
+                #what it really is
+                $Type = "$($inputObject.GetType().BaseType.Name)" 
+            }
+
+            #report the leaves in terms of object type
+            if ($depth -ilt $NestingLevel)
+            {
+                $Type = 'OutOfDepth' 
+            } 
             elseif ($Type -ieq 'XmlDocument' -or $Type -ieq 'XmlElement')
             {
-                if ($XMLAsInnerXML -ne 0) { $Type = 'InnerXML' }
+                if ($XMLAsInnerXML -ne 0)
+                {
+                    $Type = 'InnerXML' 
+                }
                 else
-                { $Type = 'XML' }
+                { 
+                    $Type = 'XML'
+                }
             } # convert to PS Alias
+
             # prevent these values being identified as an object
             if (@('boolean', 'byte', 'byte[]', 'char', 'datetime', 'decimal', 'double', 'float', 'single', 'guid', 'int', 'int32',
                     'int16', 'long', 'int64', 'OutOfDepth', 'RuntimeType', 'PSNoteProperty', 'regex', 'sbyte', 'string',
                     'timespan', 'uint16', 'uint32', 'uint64', 'uri', 'version', 'void', 'xml', 'datatable', 'Dictionary`2',
                     'SqlDataReader', 'datarow', 'ScriptBlock', 'type') -notcontains $type)
             {
-                if ($Type -ieq 'OrderedDictionary') { $Type = 'HashTable' }
-                elseif ($Type -ieq 'PSCustomObject') { $Type = 'PSObject' } #
-                elseif ($Type -ieq 'List`1') { $Type = 'Array' }
-                elseif ($inputObject -is "Array") { $Type = 'Array' } # whatever it thinks it is called
-                elseif ($inputObject -is "HashTable") { $Type = 'HashTable' } # for our purposes it is a hashtable
-                elseif (($inputObject | Get-Member -membertype Properties |
-                        Select-Object name | Where-Object name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
-                elseif (($inputObject | Get-Member -membertype Properties | Select-Object name).count -gt 1) { $Type = 'Object' }
+                if ($Type -ieq 'OrderedDictionary')
+                {
+                    $Type = 'HashTable' 
+                }
+                elseif ($Type -ieq 'PSCustomObject')
+                {
+                    $Type = 'PSObject'
+                }
+                elseif ($Type -ieq 'List`1')
+                {
+                    $Type = 'Array'
+                }
+                elseif ($inputObject -is "Array")
+                {
+                    $Type = 'Array'
+                } # whatever it thinks it is called
+                elseif ($inputObject -is "HashTable")
+                {
+                    $Type = 'HashTable'
+                } # for our purposes it is a hashtable
+                elseif (!($inputObject | Get-Member -membertype Properties | Select-Object name | Where-Object name -like 'Keys'))
+                {
+                    $Type = 'generic'
+                } #use dot notation
+                elseif (($inputObject | Get-Member -membertype Properties | Select-Object name).count -gt 1)
+                {
+                    $Type = 'Object'
+                }
             }
             write-verbose "$($padding)Type:='$Type', Object type:=$($inputObject.GetType().Name), BaseName:=$($inputObject.GetType().BaseType.Name) "
             
@@ -82,7 +119,7 @@ function ConvertTo-Yaml
                     {
                         # right, we have to format it to YAML spec.
                         '!!binary "\' + "`r`n" # signal that we are going to use the readable Base64 string format
-                        $bits = @()
+                        #$bits = @()
                         $length = $string.Length
                         $IndexIntoString = 0
                         $wrap = 100
@@ -91,17 +128,26 @@ function ConvertTo-Yaml
                             $padding + $string.Substring($IndexIntoString, $wrap).Trim() + "`r`n"
                             $IndexIntoString += $wrap
                         }
-                        if ($IndexIntoString -lt $length) { $padding + $string.Substring($IndexIntoString).Trim() + "`r`n" }
-                        else { "`r`n" }
+                        if ($IndexIntoString -lt $length)
+                        {
+                            $padding + $string.Substring($IndexIntoString).Trim() + "`r`n"
+                        }
+                        else
+                        {
+                            "`r`n" 
+                        }
                     }
                     
-                    else { '!!binary "' + $($string -replace '''', '''''') + '"' }
+                    else
+                    {
+                        '!!binary "' + $($string -replace '''', '''''') + '"'
+                    }
                     
                 }
                 'Boolean' {
                     "$(&{
                             if ($inputObject -eq $true) { 'true' }
-                            Else { 'false' }
+                            else { 'false' }
                         })"
                 }
                 'string' {
@@ -116,22 +162,46 @@ function ConvertTo-Yaml
                             $wrap = 80
                             while ($length -gt $IndexIntoString + $Wrap)
                             {
-                                $breakpoint = $wrap
+                                $BreakPoint = $wrap
                                 $earliest = $_.Substring($IndexIntoString, $wrap).LastIndexOf(' ')
                                 $latest = $_.Substring($IndexIntoString + $wrap).IndexOf(' ')
-                                if (($earliest -eq -1) -or ($latest -eq -1)) { $breakpoint = $wrap }
-                                elseif ($wrap - $earliest -lt ($latest)) { $BreakPoint = $earliest }
-                                else { $BreakPoint = $wrap + $latest }
-                                if (($wrap - $earliest) + $latest -gt 30) { $BreakPoint = $wrap } # in case it is a string without spaces
+                                if (($earliest -eq -1) -or ($latest -eq -1))
+                                {
+                                    $BreakPoint = $wrap
+                                }
+                                elseif ($wrap - $earliest -lt ($latest))
+                                {
+                                    $BreakPoint = $earliest
+                                }
+                                else
+                                {
+                                    $BreakPoint = $wrap + $latest
+                                }
+                                
+                                if (($wrap - $earliest) + $latest -gt 30)
+                                {
+                                    $BreakPoint = $wrap # in case it is a string without spaces
+                                } 
+                                
                                 $folded += $padding + $_.Substring($IndexIntoString, $BreakPoint).Trim() + "`r`n"
                                 $IndexIntoString += $BreakPoint
                             }
-                            if ($IndexIntoString -lt $length) { $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n" }
-                            else { $folded += "`r`n`r`n" }
+
+                            if ($IndexIntoString -lt $length)
+                            {
+                                $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n"
+                            }
+                            else
+                            {
+                                $folded += "`r`n`r`n"
+                            }
                         }
                         $folded
                     }
-                    else { "'$($string -replace '''', '''''')'" }
+                    else
+                    {
+                        "'$($string -replace '''', '''''')'"
+                    }
                 }
                 'Char'     { "([int]$inputObject)" }
                 {
@@ -159,10 +229,9 @@ function ConvertTo-Yaml
                 'XML'   { ("$($inputObject | Get-Member -membertype properties | Where-Object-object { @('xml', 'schema') -notcontains $_.name } | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
                 'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
                 <# 
-                'SqlDataReader'{$all = $inputObject.FieldCount
-                    while ($inputObject.Read()) {for ($i = 0
-                    $i -lt $all
-                    $i++) {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
+                'SqlDataReader'{ $all = $inputObject.FieldCount
+                    while ($inputObject.Read()) {for ($i = 0; $i -lt $all; $i++)
+                    {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
                 #>
                 default { "'$inputObject'" }
             }
