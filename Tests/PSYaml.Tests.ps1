@@ -28,7 +28,7 @@ Describe "Should pass Script Analyzer PS$PSVersion Integrations tests" {
             {
                 $Output = Invoke-ScriptAnalyzer -Path $PSScriptRoot\..\$ModuleName -Recurse
             }
-            $Output -eq $null | Should be $true
+            $Output | Should be $null
         }
     }
 }
