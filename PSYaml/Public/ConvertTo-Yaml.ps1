@@ -17,6 +17,7 @@ function ConvertTo-Yaml
  .PARAMETER Nesting Level
    internal use only. required for formatting
 #>
+    [OutputType('System.String')]
     
     [CmdletBinding()]
     param (
