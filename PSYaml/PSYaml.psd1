@@ -12,7 +12,7 @@
 RootModule = 'PSYaml.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.0.1.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'Made changes to adhere to ScriptAnalyzer rules, split out varoius if/else statements for readability.'
 
     } # End of PSData hashtable
 
