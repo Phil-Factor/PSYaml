@@ -12,7 +12,7 @@
 RootModule = 'PSYaml.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1.1'
+ModuleVersion = '1.0.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -24,16 +24,16 @@ GUID = '56352cea-dba5-4103-b55e-1e33d6cf5806'
 Author = 'Phil-Factor, Pezhore'
 
 # Company or vendor of this module
-CompanyName = 'EHI'
+CompanyName = ''
 
 # Copyright statement for this module
 Copyright = '(c) 2017 Phil-Factor, Pezhore. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'PSYaml ... updated'
+Description = 'PowerShell module used to intrepret Yaml formatted strings'
 
 # Minimum version of the Windows PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '3'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
