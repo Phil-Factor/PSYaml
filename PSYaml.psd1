@@ -17,7 +17,7 @@
 ModuleToProcess = 'PSYaml.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0.1'
+ModuleVersion = '1.0.0.2'
 
 # ID used to uniquely identify this module
 GUID = 'b8eb2cda-f09b-4c5d-bf3d-f03d212f0a81'
