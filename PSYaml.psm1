@@ -41,7 +41,7 @@ function Initialize-PsYAML_Module
     #now get the latest version of YAMLdotNet that we have
     $CurrentRelease = Get-ChildItem | where { $_.PSIsContainer } | sort CreationTime -desc | select -f 1
     pop-location
-    Add-Type -Path "$YAMLDotNetLocation\YAMLDotNet\$CurrentRelease\lib\dotnet\yamldotnet.dll"
+    Add-Type -Path "$YAMLDotNetLocation\YAMLDotNet\$CurrentRelease\lib\portable-net45+netcore45+wpa81+wp8+MonoAndroid1+MonoTouch1\yamldotnet.dll"
     
 }
 
