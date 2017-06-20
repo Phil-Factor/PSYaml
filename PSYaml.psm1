@@ -36,7 +36,7 @@ function Initialize-PsYAML_Module
             Invoke-WebRequest $NugetDistribution -OutFile "$($YAMLDotNetLocation)\nuget.exe"
         }
         Set-Alias nuget "$($YAMLDotNetLocation)\nuget.exe" -Scope Script -Verbose
-        nuget install yamldotnet #now install or update YAMLDotNet
+        nuget install yamldotnet -Version "4.1.0" #now install or update YAMLDotNet
     }
     #now get the latest version of YAMLdotNet that we have
     $CurrentRelease = Get-ChildItem | where { $_.PSIsContainer } | sort CreationTime -desc | select -f 1
