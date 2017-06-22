@@ -1,445 +1,630 @@
-﻿
-<#
-    .SYNOPSIS
-        Get latest version of NET assembly for YAMLdotNet, Add the type
-    
-    .DESCRIPTION
-        This basically adds the YamlDotNet assembly. If you haven't got it, it gets it gor you. If you want it to, it updates the assembly to the latest version.
-    
-    .PARAMETER CheckForUpdate
-        Force a check for an update. This is the only reason that this function is exposed.
-    
-    .EXAMPLE
-        		PS C:\> Initialize-PsYAML_Module -CheckForUpdate $true #check for update and load 
-    
-    .NOTES
-        Additional information about the function.
-#>
-function Initialize-PsYAML_Module
-{
+﻿Function Initialize-PSYaml_Module {
+    <#
+        .SYNOPSIS
+            Adds and update the YamlDotNet assembly.
+        
+        .DESCRIPTION
+            Get latest version of .NET assembly for YAMLdotNet and add the type.
+        
+        .PARAMETER CheckForUpdate
+            Force a check for an update. This is the only reason that this function is exposed.
+        
+        .EXAMPLE
+            PS C:\> Initialize-PSYaml_Module -CheckForUpdate $True #check for update and load 
+        
+        .NOTES
+            TODO: Additional information about the function.
+    #>
+
     [CmdletBinding()]
-    param
-    (
-        [boolean]$CheckForUpdate = $false
+
+    Param (
+        [boolean] $CheckForUpdate = $False
     )
    
-   $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
-   $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
-    push-location #save the current location
-    Set-Location -Path $YAMLDotNetLocation\YAMLdotNet #set the location in case we need an update
-    if ($checkForUpdate -or !(test-path "$($YAMLDotNetLocation)\YamlDotNet\YamlDotNet*"))
-    {
-        #Is it missing, or are we checking for an update?
-        if (-not (test-path "$($YAMLDotNetLocation)\nuget.exe")) # is nuget installed?
-        {
-            #No nuget! we need to install it.
-            Invoke-WebRequest $NugetDistribution -OutFile "$($YAMLDotNetLocation)\nuget.exe"
+    $YAMLDotNetLocation = "$Env:Userprofile\Documents\WindowsPowerShell\Modules\PSYaml"
+    $NugetDistribution = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+
+    # Save the current location
+    Push-Location
+
+    # Set the location in case we need an update
+    Set-Location -Path $YAMLDotNetLocation\YAMLdotNet
+
+    # Is YAMLDotNet missing or are we checking for an update?
+    If ($CheckForUpdate -Or !(Test-Path "$YAMLDotNetLocation\YamlDotNet\YamlDotNet*")) {
+
+        # Is NuGet installed?
+        If (-Not (Test-Path "$YAMLDotNetLocation\NuGet.exe")) {
+
+            # We need to install it NuGet
+            Invoke-WebRequest $NugetDistribution -OutFile "$YAMLDotNetLocation\NuGet.exe"
         }
-        Set-Alias nuget "$($YAMLDotNetLocation)\nuget.exe" -Scope Script -Verbose
-        nuget install yamldotnet #now install or update YAMLDotNet
+
+        Set-Alias nuget "$YAMLDotNetLocation\NuGet.exe" -Scope Script -Verbose
+
+        # Now install or update YAMLDotNet
+        nuget install yamldotnet -Version "4.1.0"
     }
-    #now get the latest version of YAMLdotNet that we have
-    $CurrentRelease = Get-ChildItem | where { $_.PSIsContainer } | sort CreationTime -desc | select -f 1
-    pop-location
+
+    # Now get the latest version of YAMLdotNet that we have
+    $CurrentRelease = Get-ChildItem | Where-Object { $_.PSIsContainer } | Sort-Object CreationTime -desc | Select-Object -f 1
+
+    Pop-Location
     Add-Type -Path "$YAMLDotNetLocation\YAMLDotNet\$CurrentRelease\lib\dotnet\yamldotnet.dll"
     
 }
 
-Initialize-PsYAML_Module
+Initialize-PSYaml_Module
 
-
-function Install-PSYamlModule
-{
+Function Install-PSYamlModule {
     [CmdletBinding()]
-    param ()
-    Add-Type -assembly "system.io.compression.filesystem"
-    # for the unzipping operation
-    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
-    # the location of the module
-    if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
-    { New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet" } #create the location
-    $client = new-object Net.WebClient #get a webclient to fetch the files
-    $client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-    $client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip', "$($YAMLDotNetLocation)PSYAML.zip")
-    if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
-    { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master" -recurse -force }
-    [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
-    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into place
+
+    Param ()
+
+    Add-Type -Assembly "System.IO.Compression.FileSystem"
+
+    # Set location for the unzipping operation
+    $YAMLDotNetLocation = "$Env:UserProfile\Documents\WindowsPowerShell\Modules\PSYaml"
+    
+    # If the module's location does not exist
+    If (-Not (Test-Path "$YAMLDotNetLocation\YAMLdotNet")) {
+
+        # Create the location
+        New-Item -ItemType "Directory" -Force -Path "$YAMLDotNetLocation\YAMLdotNet" | Out-Null
+    }
+
+    # Create a WebClient to fetch the files
+    $Client = New-Object Net.WebClient
+    $Client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    $Client.DownloadFile("https://github.com/Dargmuesli/PSYaml/archive/master.zip", "$YAMLDotNetLocation\PSYaml.zip")
+
+    # Delete the existing version if it exists
+    If (Test-Path "$YAMLDotNetLocation\PSYaml-master") {
+        Remove-Item "$YAMLDotNetLocation\PSYaml-master" -Recurse -Force
+    }
+
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$YAMLDotNetLocation\PSYaml.zip", $YAMLDotNetLocation)
+    
+    # Copy it into place
+    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation
+
+    # Delete the downloaded files
+    Remove-Item @("$YAMLDotNetLocation\PSYaml-master", "$YAMLDotNetLocation\PSYaml.zip") -Recurse -Force
 }
 
 
 
-function ConvertTo-YAML
-{
-<#
- .SYNOPSIS
-   creates a YAML description of the data in the object
- .DESCRIPTION
-   This produces YAML from any object you pass to it. It isn't suitable for the huge objects produced by some of the cmdlets such as Get-Process, but fine for simple objects
- .EXAMPLE
-   $array=@()
-   $array+=Get-Process wi* |  Select-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
-   ConvertTo-YAML $array
+Function ConvertTo-YAML {
+    <#
+        .SYNOPSIS
+            Creates a YAML description of the object's data.
 
- .PARAMETER Object 
-   the object that you want scripted out
- .PARAMETER Depth
-   The depth that you want your object scripted to
- .PARAMETER Nesting Level
-   internal use only. required for formatting
-#>
+        .DESCRIPTION
+            This produces YAML from any object you pass to it. It isn't suitable for huge objects produced by some of the cmdlets such as Get-Process, but fine for simple objects.
+
+        .EXAMPLE
+            $array=@()
+            $array+=Get-Process wi* | Select-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
+            ConvertTo-YAML $array
+
+        .PARAMETER Object 
+             The object that contains the data.
+
+        .PARAMETER Depth
+            The depth of exploration of the object's data.
+
+        .PARAMETER NestingLevel
+            Internal use only. Required for formatting.
+    #>
     
     [CmdletBinding()]
-    param (
-        [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
-        [AllowNull()]
-        $inputObject,
-        [parameter(Position = 1, Mandatory = $false, ValueFromPipeline = $false)]
-        [int]$depth = 16,
-        [parameter(Position = 2, Mandatory = $false, ValueFromPipeline = $false)]
-        [int]$NestingLevel = 0,
-        [parameter(Position = 3, Mandatory = $false, ValueFromPipeline = $false)]
-        [int]$XMLAsInnerXML = 0
+
+    Param (
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)] [AllowNull()] $InputObject,
+        [Parameter(Position = 1, Mandatory = $False, ValueFromPipeline = $False)] [Int] $Depth = 16,
+        [Parameter(Position = 2, Mandatory = $False, ValueFromPipeline = $False)] [Int] $NestingLevel = 0,
+        [Parameter(Position = 3, Mandatory = $False, ValueFromPipeline = $False)] [Int] $XMLAsInnerXML = 0
     )
     
-    BEGIN { }
-    PROCESS
-    {
-        If ($inputObject -eq $null -and !($inputObject -ne $null)) { $p += 'null'; return $p } # if it is null return null
-        if ($NestingLevel -eq 0) { '---' }
+    Begin {}
+
+    Process {
+
+        # If InputObject is null, return null
+        If ($InputObject -Eq $Null -And !($InputObject -Ne $Null)) {
+            $P += 'null'
+            Return $P
+        }
+
+        If ($NestingLevel -Eq 0) {
+            '---'
+        }
         
-        $padding = [string]'  ' * $NestingLevel # lets just create our left-padding for the block
-        try
-        {
-            $Type = $inputObject.GetType().Name # we start by getting the object's type
-            if ($Type -ieq 'Object[]') { $Type = "$($inputObject.GetType().BaseType.Name)" } #what it really is
-            if ($depth -ilt $NestingLevel) { $Type = 'OutOfDepth' } #report the leaves in terms of object type
-            elseif ($Type -ieq 'XmlDocument' -or $Type -ieq 'XmlElement')
-            {
-                if ($XMLAsInnerXML -ne 0) { $Type = 'InnerXML' }
-                else
-                { $Type = 'XML' }
-            } # convert to PS Alias
-            # prevent these values being identified as an object
-            if (@('boolean', 'byte', 'byte[]', 'char', 'datetime', 'decimal', 'double', 'float', 'single', 'guid', 'int', 'int32',
+        # Create left padding for the block
+        $Padding = [String] '    ' * $NestingLevel
+
+        Try {
+
+            # We start by getting the object's type
+            $Type = $InputObject.GetType().Name
+
+            If ($Type -Ieq 'Object[]') {
+
+                # What it really is
+                $Type = "$($InputObject.GetType().BaseType.Name)"
+            }
+
+            If ($Depth -Ilt $NestingLevel) {
+
+                # Report the leaves in terms of object type
+                $Type = 'OutOfDepth'
+            } ElseIf ($Type -Ieq 'XmlDocument' -Or $Type -Ieq 'XmlElement') {
+
+                # Convert to PS Alias
+                If ($XMLAsInnerXML -Ne 0) {
+                    $Type = 'InnerXML'
+                } Else {
+                    $Type = 'XML'
+                }
+            }
+            
+            If (@('boolean', 'byte', 'byte[]', 'char', 'datetime', 'decimal', 'double', 'float', 'single', 'guid', 'int', 'int32',
                     'int16', 'long', 'int64', 'OutOfDepth', 'RuntimeType', 'PSNoteProperty', 'regex', 'sbyte', 'string',
                     'timespan', 'uint16', 'uint32', 'uint64', 'uri', 'version', 'void', 'xml', 'datatable', 'Dictionary`2',
-                    'SqlDataReader', 'datarow', 'ScriptBlock', 'type') -notcontains $type)
-            {
-                if ($Type -ieq 'OrderedDictionary') { $Type = 'HashTable' }
-                elseif ($Type -ieq 'PSCustomObject') { $Type = 'PSObject' } #
-                elseif ($Type -ieq 'List`1') { $Type = 'Array' }
-                elseif ($inputObject -is "Array") { $Type = 'Array' } # whatever it thinks it is called
-                elseif ($inputObject -is "HashTable") { $Type = 'HashTable' } # for our purposes it is a hashtable
-                elseif (($inputObject | gm -membertype Properties |
-                        Select name | Where name -like 'Keys') -ne $null) { $Type = 'generic' } #use dot notation
-                elseif (($inputObject | gm -membertype Properties | Select name).count -gt 1) { $Type = 'Object' }
+                    'SqlDataReader', 'datarow', 'ScriptBlock', 'type') -NotContains $Type) {
+                
+                # Prevent these values being identified as an object
+                If ($Type -Ieq 'OrderedDictionary') {
+                    $Type = 'HashTable'
+                } ElseIf ($Type -Ieq 'PSCustomObject') {
+                    $Type = 'PSObject'
+                } ElseIf ($Type -Ieq 'List`1') {
+                    $Type = 'Array'
+                } ElseIf ($InputObject -Is "Array") {
+
+                    # Whatever it thinks it is called
+                    $Type = 'Array'
+                } ElseIf ($InputObject -Is "HashTable") {
+
+                    # For our purposes it is a hashtable
+                    $Type = 'HashTable'
+                } ElseIf (($InputObject | Get-Member -MemberType Properties | Select-Object Name | Where-Object name -Like 'Keys') -Ne $Null) {
+
+                    # Use dot notation
+                    $Type = 'generic'
+                } ElseIf (($InputObject | Get-Member -MemberType Properties | Select-Object Name).Count -Gt 1) {
+                    $Type = 'Object'
+                }
             }
-            write-verbose "$($padding)Type:='$Type', Object type:=$($inputObject.GetType().Name), BaseName:=$($inputObject.GetType().BaseType.Name) "
+
+            Write-Verbose "${Padding}Type:='$Type', Object type:=$($InputObject.GetType().Name), BaseName:=$($InputObject.GetType().BaseType.Name)"
             
-            switch ($Type)
-            {
-                'ScriptBlock'{ "{$($inputObject.ToString())}" }
-                'InnerXML'        { "|`r`n" + ($inputObject.OuterXMl.Split("`r`n") | foreach{ "$padding$_`r`n" }) }
-                'DateTime'   { $inputObject.ToString('s') } # s=SortableDateTimePattern (based on ISO 8601) using local time
-                'Byte[]'     {
-                    $string = [System.Convert]::ToBase64String($inputObject)
-                    if ($string.Length -gt 100)
-                    {
-                        # right, we have to format it to YAML spec.
-                        '!!binary "\' + "`r`n" # signal that we are going to use the readable Base64 string format
-                        $bits = @(); $length = $string.Length; $IndexIntoString = 0; $wrap = 100
-                        while ($length -gt $IndexIntoString + $Wrap)
-                        {
-                            $padding + $string.Substring($IndexIntoString, $wrap).Trim() + "`r`n"
-                            $IndexIntoString += $wrap
+            Switch ($Type) {
+                'ScriptBlock' {
+                    "{$($InputObject.ToString())}"
+                }
+                'InnerXML' {
+                    "|`r`n" + ($InputObject.OuterXMl.Split("`r`n") | ForEach-Object { "$Padding$_`r`n" })
+                }
+                'DateTime' {
+
+                    # s=SortableDateTimePattern (based on ISO 8601) using local time
+                    $InputObject.ToString('s')
+                }
+                'Byte[]' {
+                    $String = [System.Convert]::ToBase64String($InputObject)
+
+                    If ($String.Length -Gt 100) {
+
+                        # Format it to YAML spec. Signal that we are going to use the readable Base64 string format
+                        '!!binary "\' + "`r`n"
+
+                        #$Bits = @(); $Length = $String.Length; $IndexIntoString = 0; $Wrap = 100
+                        While ($Length -Gt $IndexIntoString + $Wrap) {
+                            $Padding + $String.Substring($IndexIntoString, $Wrap).Trim() + "`r`n"
+                            $IndexIntoString += $Wrap
                         }
-                        if ($IndexIntoString -lt $length) { $padding + $string.Substring($IndexIntoString).Trim() + "`r`n" }
-                        else { "`r`n" }
+
+                        If ($IndexIntoString -Lt $Length) {
+                            $Padding + $String.Substring($IndexIntoString).Trim() + "`r`n"
+                        } Else {
+                            "`r`n"
+                        }
                     }
                     
-                    else { '!!binary "' + $($string -replace '''', '''''') + '"' }
-                    
+                    Else {
+                        '!!binary "' + $($String -replace '''', '''''') + '"'
+                    }
                 }
                 'Boolean' {
                     "$(&{
-                            if ($inputObject -eq $true) { 'true' }
-                            Else { 'false' }
-                        })"
+                        If ($InputObject -Eq $True) {
+                            'true'
+                        } Else {
+                            'false'
+                        }
+                    })"
                 }
                 'string' {
-                    $String = "$inputObject"
-                    if ($string -match '[\r\n]' -or $string.Length -gt 80)
-                    {
-                        # right, we have to format it to YAML spec.
-                        $folded = ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
-                        $string.Split("`n") | foreach {
-                            $length = $_.Length; $IndexIntoString = 0; $wrap = 80
-                            while ($length -gt $IndexIntoString + $Wrap)
-                            {
-                                $breakpoint = $wrap
-                                $earliest = $_.Substring($IndexIntoString, $wrap).LastIndexOf(' ')
-                                $latest = $_.Substring($IndexIntoString + $wrap).IndexOf(' ')
-                                if (($earliest -eq -1) -or ($latest -eq -1)) { $breakpoint = $wrap }
-                                elseif ($wrap - $earliest -lt ($latest)) { $BreakPoint = $earliest }
-                                else { $BreakPoint = $wrap + $latest }
-                                if (($wrap - $earliest) + $latest -gt 30) { $BreakPoint = $wrap } # in case it is a string without spaces
-                                $folded += $padding + $_.Substring($IndexIntoString, $BreakPoint).Trim() + "`r`n"
+                    $String = "$InputObject"
+
+                    If ($String -Match '[\r\n]' -Or $String.Length -Gt 80) {
+
+                        # Format it to YAML spec. Signal that we are going to use the readable 'newlines-folded' format.
+                        $Folded = ">`r`n"
+                        $String.Split("`n") | ForEach-Object {
+                            $Length = $_.Length; $IndexIntoString = 0; $Wrap = 80
+
+                            While ($Length -Gt $IndexIntoString + $Wrap) {
+                                $Breakpoint = $Wrap
+                                $Earliest = $_.Substring($IndexIntoString, $Wrap).LastIndexOf(' ')
+                                $Latest = $_.Substring($IndexIntoString + $Wrap).IndexOf(' ')
+
+                                If (($Earliest -Eq -1) -Or ($Latest -Eq -1)) {
+                                    $Breakpoint = $Wrap
+                                } ElseIf ($Wrap - $Earliest -Lt ($Latest)) {
+                                    $BreakPoint = $Earliest
+                                } Else {
+                                    $BreakPoint = $Wrap + $Latest
+                                }
+
+                                If (($Wrap - $Earliest) + $Latest -Gt 30) {
+
+                                    # In case it is a string without spaces
+                                    $BreakPoint = $Wrap
+                                }
+
+                                $Folded += $Padding + $_.Substring($IndexIntoString, $BreakPoint).Trim() + "`r`n"
                                 $IndexIntoString += $BreakPoint
                             }
-                            if ($IndexIntoString -lt $length) { $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n" }
-                            else { $folded += "`r`n`r`n" }
+
+                            If ($IndexIntoString -Lt $Length) {
+                                $Folded += $Padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n"
+                            } Else {
+                                $Folded += "`r`n`r`n"
+                            }
                         }
-                        $folded
+
+                        $Folded
+                    } Else {
+                        "'$($String -replace '''', '''''')'"
                     }
-                    else { "'$($string -replace '''', '''''')'" }
                 }
-                'Char'     { "([int]$inputObject)" }
-                {
-                    @('byte', 'decimal', 'double', 'float', 'single', 'int', 'int32', 'int16', `
-                        'long', 'int64', 'sbyte', 'uint16', 'uint32', 'uint64') -contains $_
+                'Char' {
+                    "([Int] $InputObject)"
                 }
-                { "$inputObject" } # rendered as is without single quotes
-                'PSNoteProperty' { "$(ConvertTo-YAML -inputObject $inputObject.Value -depth $depth -NestingLevel ($NestingLevel + 1))" }
-                'Array'    { "$($inputObject | ForEach { "`r`n$padding- $(ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
-                'HashTable'{
-                    ("$($inputObject.GetEnumerator() | ForEach {
-                                "`r`n$padding  $($_.Name): " +
-                                (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
-                            })")
+                {@('byte', 'decimal', 'double', 'float', 'single', 'int', 'int32', 'int16', `
+                            'long', 'int64', 'sbyte', 'uint16', 'uint32', 'uint64') -Contains $_ } {
+                    
+                    # Rendered as is without single quotes
+                    "$InputObject"
                 }
-                'Dictionary`2'{
-                    ("$($inputObject.GetEnumerator() | ForEach {
-                                "`r`n$padding  $($_.Key): " +
-                                (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
-                            })")
+                'PSNoteProperty' {
+                    "$(ConvertTo-YAML -InputObject $InputObject.Value -Depth $Depth -NestingLevel ($NestingLevel + 1))"
                 }
-                'PSObject' { ("$($inputObject.PSObject.Properties | ForEach { "`r`n$padding $($_.Name): " + (ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1)) })") }
-                'generic'  { "$($inputObject.Keys | ForEach { "`r`n$padding  $($_):  $(ConvertTo-YAML -inputObject $inputObject.$_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
-                'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | ForEach { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
-                'XML'   { ("$($inputObject | Get-Member -membertype properties | where-object { @('xml', 'schema') -notcontains $_.name } | Select-Object name | ForEach { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
-                'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | ForEach { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
-                #  'SqlDataReader'{$all = $inputObject.FieldCount; while ($inputObject.Read()) {for ($i = 0; $i -lt $all; $i++) {"`r`n$padding $($Reader.GetName($i)): $(ConvertTo-YAML -inputObject $($Reader.GetValue($i)) -depth $depth -NestingLevel ($NestingLevel+1))"}}
-                default { "'$inputObject'" }
+                'Array' {
+                    "$($InputObject | ForEach-Object {
+                        "`r`n$Padding- $(ConvertTo-YAML -InputObject $_ -Depth $Depth -NestingLevel ($NestingLevel + 1))"
+                    })"
+                }
+                'HashTable' {
+                    ("$($InputObject.GetEnumerator() | ForEach-Object {
+                        "`r`n$Padding $($_.Name): " + (ConvertTo-YAML -InputObject $_.Value -Depth $Depth -NestingLevel ($NestingLevel + 1))
+                    })")
+                }
+                'Dictionary`2' {
+                    ("$($InputObject.GetEnumerator() | ForEach-Object {
+                        "`r`n$Padding $($_.Key): " + (ConvertTo-YAML -InputObject $_.Value -Depth $Depth -NestingLevel ($NestingLevel + 1))
+                    })")
+                }
+                'PSObject' {
+                    ("$($InputObject.PSObject.Properties | ForEach-Object {
+                        "`r`n$Padding $($_.Name): " + (ConvertTo-YAML -InputObject $_ -Depth $Depth -NestingLevel ($NestingLevel + 1))
+                    })")
+                }
+                'generic' {
+                    "$($InputObject.Keys | ForEach-Object {
+                        "`r`n$Padding $($_): $(ConvertTo-YAML -InputObject $InputObject.$_ -Depth $Depth -NestingLevel ($NestingLevel + 1))"
+                    })"
+                }
+                'Object' {
+                    ("$($InputObject | Get-Member -MemberType Properties | Select-Object Name | ForEach-Object {
+                        "`r`n$Padding $($_.name): $(ConvertTo-YAML -InputObject $InputObject.$($_.name) -Depth $NestingLevel -NestingLevel ($NestingLevel + 1))"
+                    })")
+                }
+                'XML' {
+                    ("$($InputObject | Get-Member -MemberType Properties | Where-Object {
+                        @('xml', 'schema') -notcontains $_.name
+                    } | Select-Object Name | ForEach-Object {
+                        "`r`n$Padding $($_.name): $(ConvertTo-YAML -InputObject $InputObject.$($_.name) -Depth $Depth -NestingLevel ($NestingLevel + 1))"
+                    })")
+                }
+                'DataRow' {
+                    ("$($InputObject | Get-Member -MemberType Properties | Select-Object Name | ForEach-Object {
+                        "`r`n$Padding $($_.name): $(ConvertTo-YAML -InputObject $InputObject.$($_.name) -Depth $Depth -NestingLevel ($NestingLevel + 1))"
+                    })")
+                }
+
+                # 'SqlDataReader'{$all = $InputObject.FieldCount; While ($InputObject.Read()) {for ($i = 0; $i -Lt $all; $i++) {"`r`n$Padding $($Reader.GetName($i)): $(ConvertTo-YAML -InputObject $($Reader.GetValue($i)) -Depth $Depth -NestingLevel ($NestingLevel+1))"}}
+                Default {
+                    "'$InputObject'"
+                }
             }
+        } Catch {
+            Write-Error "Error'$($_)' in script $($_.InvocationInfo.ScriptName) $($_.InvocationInfo.Line.Trim()) (line $($_.InvocationInfo.ScriptLineNumber)) char $($_.InvocationInfo.OffsetInLine) executing $($_.InvocationInfo.MyCommand) on $Type object '$($InputObject)' Class: $($InputObject.GetType().Name) BaseClass: $($InputObject.GetType().BaseType.Name)"
         }
-        catch
-        {
-            write-error "Error'$($_)' in script $($_.InvocationInfo.ScriptName) $($_.InvocationInfo.Line.Trim()) (line $($_.InvocationInfo.ScriptLineNumber)) char $($_.InvocationInfo.OffsetInLine) executing $($_.InvocationInfo.MyCommand) on $type object '$($inputObject)' Class: $($inputObject.GetType().Name) BaseClass: $($inputObject.GetType().BaseType.Name) "
-        }
-        finally { }
     }
     
-    END { }
+    END {}
 }
 
-
-
- 
-	
-	<#
-	    .SYNOPSIS
-	        Converts from a YAMLdotNet Document 
-	    
-	    .DESCRIPTION
-	        A detailed description of the ConvertFrom-YAMLDocument function.
-	    
-	    .PARAMETER TheNode
-	        A description of the TheNode parameter.
-	    
-	    .EXAMPLE
-	        		PS C:\> ConvertFrom-YAMLDocument -TheNode $value1
-	
-	    .EXAMPLE   
-	                $result=ConvertFrom-YAMLDocument $document -verbose
-	                $result|Convertto-YAML
-	
-	    .NOTES
-	     ===========================================================================
-		 Created on:   	22-Feb-16 7:57 PM
-		 Created by:   	 Phil Factor
-		 Organization: 	 Phil Factory
-		 Filename:     	
-		===========================================================================
-	
-	#>
-<#
-    .SYNOPSIS
-        Converts from a YAMLdotNet Document 
-    
-    .DESCRIPTION
-        A detailed description of the ConvertFrom-YAMLDocument function.
-    
-    .PARAMETER TheNode
-        A description of the TheNode parameter.
-    
-    .EXAMPLE
-        		PS C:\> ConvertFrom-YAMLDocument -TheNode $value1
-
-    .EXAMPLE   
-                $result=ConvertFrom-YAMLDocument $document -verbose
-                $result|Convertto-YAML
-
-    .NOTES
-     ===========================================================================
-	 Created on:   	22-Feb-16 7:57 PM
-	 Created by:   	 Phil Factor
-	 Organization: 	 Phil Factory
-	 Filename:     	
-	===========================================================================
-
-#>
-function ConvertFrom-YAMLDocument
-{
-    [CmdletBinding()]
-    param
-    (
-        [object]$TheNode #you pass in a node that, when you call it, will be the root node. 
-    )
-    #initialise variables that are needed for providing the correct powershell data type for a string-based value.
-    [bool]$ABool = $false; [int]$AnInt = $null; [long]$ALong = $null; [decimal]$adecimal = $null; [single]$ASingle = $null;
-    [double]$ADouble = $null; [datetime]$ADatetime = '1/1/2000';
-    
-    $TheTypeOfNode = $TheNode.GetType().Name # determine this
-    Write-Verbose "$TheTypeOfNode = $($theNode)" #just so see what is going on
-     $Style = $TheNode.Style; $Tag = $TheNode.Tag; $Anchor = $TheNode.Anchor; 
-     Write-Verbose "Tag=$tag, Style=$style, Anchor=$anchor"    
-    if ($TheTypeOfNode -eq 'YamlDocument') #if it is the document, then call recursively with the rrot node
-    { $TheObject = ConvertFrom-YAMLDocument $TheNode.RootNode }
-    elseif ($TheTypeOfNode -eq 'YamlMappingNode') #ah mapping nodes 
-    {
-        $TheObject = [ordered]@{ }; $theNode |
-        foreach{ $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value; }
-    }
-    elseif ($TheTypeOfNode -eq 'YamlScalarNode' -or $TheTypeOfNode -eq 'Object[]')
-    {
-        $value = "$($theNode)"
-        if ($tag -eq $null)
-        {
-            $value = switch -Regex ($value)
-            {
-                # if it is one of the allowed boolean values
-                '(?i)\A(?:on|yes)\z' { 'true'; break } #Deal with all the possible YAML boolenas
-                '(?i)\A(?:off|no)\z' { 'false'; break }
-                default { $value }
-            };
-        };
+FunctionConvertFrom-YAMLDocument {
+    <#
+        .SYNOPSIS
+            Converts from a YAMLdotNet Document 
         
-        $TheObject =
-            if ($tag -ieq 'tag:yaml.org,2002:str') { [string]$Value } #it is specified as a string
-            elseif ($tag -ieq 'tag:yaml.org,2002:bool') { [bool]$Value } #it is specified as a boolean
-            elseif ($tag -ieq 'tag:yaml.org,2002:float') { [double]$Value } #it is specified as adouble
-            elseif ($tag -ieq 'tag:yaml.org,2002:int') { [int]$Value } #it is specified as a int
-            elseif ($tag -ieq 'tag:yaml.org,2002:null') { $null } #it is specified as a null
-            elseif ($tag -ieq 'tag:yaml.org,2002:timestamp') {[datetime]$Value} #it is date/timestamp
-            elseif ($tag -ieq 'tag:yaml.org,2002:binary') {[System.Convert]::FromBase64String($Value)}
-            elseif ([int]::TryParse($Value, [ref]$AnInt)) { $AnInt } #is it a short integer
-            elseif ([bool]::TryParse($Value, [ref]$ABool)) { $ABool } #is it a boolean
-            elseif ([long]::TryParse($Value, [ref]$ALong)) { $ALong } #is it a long integer
-            elseif ([decimal]::TryParse($Value, [ref]$ADecimal)) { $ADecimal } #is it a decimal
-            elseif ([single]::TryParse($Value, [ref]$ASingle)) { $ASingle } #is it a single float
-            elseif ([double]::TryParse($Value, [ref]$ADouble)) { $ADouble } #is it a double float
-            elseif ([datetime]::TryParse($Value, [ref]$ADatetime)) { $ADatetime } #is it a datetime
-            else { [string]$Value }        
+        .DESCRIPTION
+            A detailed description of the ConvertFrom-YAMLDocument function.
+        
+        .PARAMETER TheNode
+            A description of the TheNode parameter.
+        
+        .EXAMPLE
+            PS C:\> ConvertFrom-YAMLDocument -TheNode $Value1
+
+        .EXAMPLE   
+            $result=ConvertFrom-YAMLDocument $document -verbose
+            $result|Convertto-YAML
+
+        .NOTES
+            ===========================================================================
+            Created on:   	22-Feb-16 7:57 PM
+            Created by:   	 Phil Factor
+            Organization: 	 Phil Factory
+            Filename:     	
+            ===========================================================================
+    #>
+
+    [CmdletBinding()]
+
+    Param (
+
+        # You pass in a node that, when you call it, will be the root node. 
+        [Object] $TheNode
+    )
+
+    # Initialise variables that are needed for providing the correct powershell data type for a string-based value.
+    [Bool] $ABool = $False
+    [Int] $AnInt = $Null
+    [Long] $ALong = $Null
+    [Decimal] $ADecimal = $Null
+    [Single] $ASingle = $Null
+    [Double] $ADouble = $Null
+    [DateTime] $ADatetime = '1/1/2000';
+    
+    # Determine this
+    $TheTypeOfNode = $TheNode.GetType().Name
+
+    # Just so see what is going on
+    Write-Verbose "$TheTypeOfNode = $($TheNode)"
+
+    $Style = $TheNode.Style
+    $Tag = $TheNode.Tag
+    $Anchor = $TheNode.Anchor
+
+    Write-Verbose "Tag=$Tag, Style=$style, Anchor=$anchor"    
+    
+    # If it is the document, then call recursively with the rrot node
+    If ($TheTypeOfNode -Eq 'YamlDocument') {
+        $TheObject = ConvertFrom-YAMLDocument $TheNode.RootNode
+    } ElseIf ($TheTypeOfNode -Eq 'YamlMappingNode') {
+
+        # Ah mapping nodes 
+        $TheObject = [ordered]@{ }; $TheNode | ForEach-Object {
+            $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value
+        }
+    } ElseIf ($TheTypeOfNode -Eq 'YamlScalarNode' -Or $TheTypeOfNode -Eq 'Object[]') {
+        $Value = "$TheNode"
+
+        If ($Tag -Eq $Null) {
+            $Value = Switch -Regex ($Value) {
+
+                # If it is one of the allowed boolean values
+                '(?i)\A(?:on|yes)\z' {
+                    'true'
+                    break
+                }
+
+                #Deal with all the possible YAML boolenas
+                '(?i)\A(?:off|no)\z' {
+                    'false'
+                    break
+                }
+                Default {
+                    $Value
+                }
+            }
+        }
+        
+        $TheObject = If ($Tag -Ieq 'tag:yaml.org,2002:str') {
+
+            # It is specified as a string
+            [String] $Value
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:bool') {
+                
+            # It is specified as a boolean
+            [Bool] $Value
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:float') {
+                
+            # It is specified as a double
+            [Double] $Value
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:int') {
+                
+            # It is specified as a int
+            [Int] $Value
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:null') {
+                
+            # It is specified as a null
+            $Null
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:timestamp') {
+                
+            # It is date/timestamp
+            [DateTime] $Value
+        } ElseIf ($Tag -Ieq 'tag:yaml.org,2002:binary') {
+            [System.Convert]::FromBase64String($Value)
+        } ElseIf ([Int]::TryParse($Value, [ref] $AnInt)) {
+                
+            # Is it a short integer
+            $AnInt
+        } ElseIf ([Bool]::TryParse($Value, [ref] $ABool)) {
+                
+            # Is it a boolean
+            $ABool
+        } ElseIf ([Long]::TryParse($Value, [ref] $ALong)) {
+                
+            # Is it a long integer
+            $ALong
+        } ElseIf ([Decimal]::TryParse($Value, [ref] $ADecimal)) {
+                
+            # Is it a decimal
+            $ADecimal
+        } ElseIf ([Single]::TryParse($Value, [ref] $ASingle)) {
+                
+            # Is it a single float
+            $ASingle
+        } ElseIf ([Double]::TryParse($Value, [ref] $ADouble)) {
+                
+            # Is it a double float
+            $ADouble
+        } ElseIf ([DateTime]::TryParse($Value, [ref] $ADatetime)) {
+
+            # Is it a datetime
+            $ADatetime
+        } Else {
+            [String] $Value
+        }
+
+        # Sometimes you just get a raw object, not a node
+    } ElseIf ($TheTypeOfNode -Eq 'Object[]') {
+
+        # So you return its value
+        $TheObject = $TheNode.Value
+    } ElseIf ($TheTypeOfNode -Eq 'YamlSequenceNode') {
+        
+        # In which case you 
+        $TheObject = @()
+        $TheNode | ForEach-Object {
+            $TheObject += ConvertFrom-YAMLDocument $_
+        }
+    } Else {
+        Write-Verbose "Unrecognised token $TheTypeOfNode"
     }
-    elseif ($TheTypeOfNode -eq 'Object[]') #sometimes you just get a raw object, not a node
-    { $TheObject = $theNode.Value } #so you return its value
-    elseif ($TheTypeOfNode -eq 'YamlSequenceNode') #in which case you 
-    { $TheObject = @(); $theNode | foreach{ $TheObject += ConvertFrom-YAMLDocument $_ } }
-    else { Write-Verbose "Unrecognised token $TheTypeOfNode" }
+    
     $TheObject
 }
 
-function ConvertFrom-YAML 
-    {
+Function ConvertFrom-YAML {
     [CmdletBinding()]
-    param
-    (
-    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
-    $YamlString
+
+    Param (
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)] $YamlString
     )
-BEGIN { }
-PROCESS
-    {$stringReader = new-object System.IO.StringReader([string]$yamlString)
-    $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
-    $yamlStream.Load([System.IO.TextReader]$stringReader)
-    ConvertFrom-YAMLDocument ($yamlStream.Documents[0])}
-END {}
+    
+    BEGIN {}
+
+    PROCESS {
+        $StringReader = New-Object System.IO.StringReader([String] $YamlString)
+        $YamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
+        $YamlStream.Load([System.IO.TextReader] $StringReader)
+
+        ConvertFrom-YAMLDocument ($YamlStream.Documents[0])
+    }
+
+    END {}
 }
 
 
-Function JSONSerialize
-    {
+Function Export-JSON {
     [CmdletBinding()]
-    param
-    (
-    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
-    [object]$PowershellObject
+
+    Param (
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)] [Object] $PowershellObject
     )
-BEGIN { }
-PROCESS
-    {$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
-#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
-$stringBuilder = New-Object System.Text.StringBuilder
-$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
-$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
-$stream.ToString()}
-END {}
+    
+    BEGIN {}
+
+    PROCESS {
+        $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
+        
+        #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+        $StringBuilder = New-Object System.Text.StringBuilder
+        $Stream = New-Object System.IO.StringWriter -ArgumentList $StringBuilder 
+        $Serializer.Serialize($Stream, $PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+        $Stream.ToString()
+    }
+
+    END {}
 }
 
-Function YAMLSerialize
-    {
+Function Export-YAML {
     [CmdletBinding()]
-    param
-    (
-    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
-    [object]$PowershellObject
+
+    Param (
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)] [Object] $PowershellObject
     )
-BEGIN { }
-PROCESS
-    {$Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
-#None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
-$stringBuilder = New-Object System.Text.StringBuilder
-$stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder 
-$Serializer.Serialize($stream,$PowershellObject) #System.IO.TextWriter writer, System.Object graph)
-$stream.ToString()}
-END {}
+
+    BEGIN {}
+
+    PROCESS {
+        $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::emitDefaults)
+        
+        #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+        $StringBuilder = New-Object System.Text.StringBuilder
+        $Stream = New-Object System.IO.StringWriter -ArgumentList $StringBuilder 
+        $Serializer.Serialize($Stream, $PowershellObject) #System.IO.TextWriter writer, System.Object graph)
+        $Stream.ToString()
+    }
+
+    END {}
 }
 
-Function YAMLDeserialize
-
-    {
+Function Import-YAML {
     [CmdletBinding()]
-    param
-    (
+
+    Param (
         $YamlString
     )
-$stringReader = new-object System.IO.StringReader([string]$yamlString)
-$Deserializer=New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
-$Deserializer.Deserialize([System.IO.TextReader]$stringReader)
+
+    $StringReader = New-Object System.IO.StringReader([String] $YamlString)
+    $Deserializer = New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $Null, $Null, $False
+    $Deserializer.Deserialize([System.IO.TextReader] $StringReader)
 }
 
 
 
-Function Convert-YAMLtoJSON
-    {
-    param
-    (
-    [parameter(Position = 0, Mandatory = $true, ValueFromPipeline = $true)]
-    $YamlString
+Function Convert-YAMLtoJSON {
+    Param (
+        [Parameter(Position = 0, Mandatory = $True, ValueFromPipeline = $True)]
+        $YamlString
     )
-BEGIN { }
-PROCESS
-    {$stringReader = new-object System.IO.StringReader([string]$yamlString)
-    $Deserializer = New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $null, $null, $false
-    $netObject = $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
-    $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
-    #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
-    $stringBuilder = New-Object System.Text.StringBuilder
-    $stream = New-Object System.io.StringWriter -ArgumentList $stringBuilder
-    $Serializer.Serialize($stream, $netObject) #
-    $stream.ToString()}
-END {}
+
+    BEGIN {}
+
+    PROCESS {
+        $StringReader = New-Object System.IO.StringReader([String] $YamlString)
+        $Deserializer = New-Object -TypeName YamlDotNet.Serialization.Deserializer -ArgumentList $Null, $Null, $False
+        $NetObject = $Deserializer.Deserialize([System.IO.TextReader] $StringReader)
+        $Serializer = New-Object YamlDotNet.Serialization.Serializer([YamlDotNet.Serialization.SerializationOptions]::JsonCompatible)
+        
+        #None. Roundtrip, DisableAliases, EmitDefaults, JsonCompatible, DefaultToStaticType
+        $StringBuilder = New-Object System.Text.StringBuilder
+        $Stream = New-Object System.IO.StringWriter -ArgumentList $StringBuilder
+        $Serializer.Serialize($Stream, $NetObject)
+        $Stream.ToString()
+    }
+
+    END {}
 }
 
-Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, YAMLDeserialize, YAMLSerialize, JSONSerialize, Convert-YAMLtoJSON
+Export-ModuleMember ConvertTo-YAML, ConvertFrom-YAMLDocument, ConvertFrom-YAML, Import-YAML, Export-YAML, Export-JSON, Convert-YAMLtoJSON
