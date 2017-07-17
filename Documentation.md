@@ -2,7 +2,8 @@
 
 PSYaml is a simple PowerShell module that allows you to serialize PowerShell objects to "Yet Another Markup Language" (YAML) documents and deserialize YAML documents to PowerShell objects. It uses [Antoine Aubry's](http://aaubry.net) [excellent YamlDotNet library](http://aaubry.net/pages/yamldotnet.html).
 
-To start, you can simply load the PowerShell file and the manifest from its home on GitHub https://github.com/Phil-Factor/PSYaml[PSYaml] into this directory or use a script that I provide in the next listing
+To start, you can simply load the PowerShell file and the manifest from its home on GitHub [PSYaml](https://github.com/Phil-Factor/PSYaml) into this directory or use a script that I provide in the next listing
+
 ```powershell
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
 ```
@@ -127,7 +128,7 @@ And here is the same in JSON.
    { name: 'Derek DBA',
     job: 'DBA',
     skills: [ 'TSQL', 'fortran', 'cobol' ] } } ]
-```-
+```
 
 I haven’t really the space in this article for the XML version. 
 
@@ -486,8 +487,8 @@ This will give the result (just the first three rows)
 #and so on...  
 ```
 ## So what is the point of all this?
-Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to http://www.yaml.org/type[specify your data type]. You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of http://www.yaml.org/type/timestamp.html[timestamp], http://www.yaml.org/type/binary.html[binary], http://www.yaml.org/type/str.html[str], http://www.yaml.org/type/bool.html[bool], http://www.yaml.org/type/float.html[float], http://www.http://yaml.org/type/int.html[int] and http://www.yaml.org/type/null.html[null]. if there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
+Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to [specify your data type](http://www.yaml.org/type). You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of [timestamp](http://www.yaml.org/type/timestamp.html), [binary](http://www.yaml.org/type/binary.html), [str](http://www.yaml.org/type/str.html), [bool](http://www.yaml.org/type/bool.html), [float](http://www.yaml.org/type/float.html), [int](http://www.http://yaml.org/type/int.html) and [null](http://www.yaml.org/type/null.html). If there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
 
-YAML also has a rather crude way of allowing you to represent relational data by means of http://www.yaml.org/spec/1.2/spec.html#node//[node] Anchors. These A have an '&' prefix. An http://www.yaml.org/spec/1.2/spec.html#alias//[alias node] can then be used to indicate additional inclusions of the anchored node. It means that you don't have to repeat nodes in a document. You just write it once and then refer to the node by its anchor.
+YAML also has a rather crude way of allowing you to represent relational data by means of [node](http://www.yaml.org/spec/1.2/spec.html#node//) Anchors. These A have an '&' prefix. An [alias node](http://www.yaml.org/spec/1.2/spec.html#alias//) can then be used to indicate additional inclusions of the anchored node. It means that you don't have to repeat nodes in a document. You just write it once and then refer to the node by its anchor.
 
 I find YAML to be very useful. What really convinces me of the power of YAML is to be able to walk the representational model to do special-purpose jobs such as processing hierarchical data to load into SQL. It is at that point that I finally decided that YAML had a lot going for it as a format of data document.
