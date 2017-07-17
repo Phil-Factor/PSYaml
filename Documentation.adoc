@@ -1,42 +1,41 @@
-## PSYaml
+= PSYaml
 
-PSYaml is a simple PowerShell module that allows you to serialize PowerShell objects to "Yet Another Markup Language" (YAML) documents and deserialize YAML documents to PowerShell objects. It uses [Antoine Aubry's](http://aaubry.net) [excellent YamlDotNet library](http://aaubry.net/pages/yamldotnet.html).
+<<<
 
-Prior versions of this module required that you manually procure and move the .NET library into a folder before the module would function
-To start, you can simply load the PowerShell file and the manifest from its home on GitHub [PSYaml](https://github.com/Phil-Factor/PSYaml) into this directory or use a script that I provide in the next listing
+PSYaml is a simple PowerShell module that I've written that allows you to serialize PowerShell objects to "YAML Ain't Markup Language" (YAML) documents and deserialize YAML documents to PowerShell objects. It uses http://aaubry.net[Antoine Aubry's] http://aaubry.net/pages/yamldotnet.html[excellent YamlDotNet library] 
 
-```powershell
+To start, you can simply load the PowerShell file and the manifest from its home on GitHub https://github.com/Phil-Factor/PSYaml[PSYaml] into this directory or use a script that I provide in the next listing
+[source,powershell]
+----
 $($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
-```
-
+----
 I do it, or update it, via a script like this.  
-
-```powershell
-
-Add-Type -assembly "system.io.compression.filesystem"
-# for the unzipping operation
-$YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
-# the location of the module
-if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
-    {New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet"} #create the location
-$client = new-object Net.WebClient #get a webclient to fetch the files
-$client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip',"$($YAMLDotNetLocation)PSYAML.zip")
-if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
-    { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master"-recurse -force}
-[io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
-Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into pleace
-```
-
+[source,powershell]
+----
+    Add-Type -assembly "system.io.compression.filesystem"
+    # for the unzipping operation
+    $YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
+    # the location of the module
+    if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
+      {New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet"} #create the location
+    $client = new-object Net.WebClient #get a webclient to fetch the files
+    $client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
+    $client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip',"$($YAMLDotNetLocation)PSYAML.zip")
+    if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
+      { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master"-recurse -force}
+    [io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
+    Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into pleace
+----
 Beware that you need to be clear about your  execution policy before you start and check the file before you load the module. Once you are ready, you can load the module into your PowerShell session like this. 
-
-```powershell
+[source,powershell]
+----
 import-module psyaml 
-```
+----
 The first time you do it, you need to be connected to the internet so it can load the latest version of the YamlDotNet library from NuGet.
 
 Once the module is in place and working, you can execute code like this 
-```powershell
+[source,powershell]
+----
 [ordered]@{
  Computername = $(Get-wmiobject win32_operatingsystem).csname
  OS = $(Get-wmiobject win32_operatingsystem).caption
@@ -47,10 +46,11 @@ Once the module is in place and working, you can execute code like this
  Processes = (Get-Process).Count
  drives =  Get-WmiObject Win32_logicaldisk|select DeviceID, description
  } |ConvertTo-YAML 
-```
+----
 to give you a YAML representation of the data that is easy to assimilate.
  
-```yaml
+[source,yaml]
+----
   Computername: 'LTPFACTOR' 
   OS: 'Microsoft Windows 8.1 Enterprise' 
   Uptime (hours): 21 
@@ -80,17 +80,16 @@ to give you a YAML representation of the data that is easy to assimilate.
   - 
      DeviceID: 'S:' 
      description: 'Network Connection'
-```
-
+----
 Try it with something like `Format-table` and you'll probably agree that there is a place for rendering hierarchical information in a human-oriented way. 
 
-## YAML and PowerShell
+== YAML and PowerShell
 
 When you need to use structured data in PowerShell, you have to think of writing it out - serializing it – and reading it into an object– deserialising it. You’ll hear talk of serializing objects, but really, you’re only serializing the data within it, such as properties, lists, collections, dictionaries and so on, rather than the methods. In a compiled language, a serialized object can’t do anything for itself once it has been deserialised and re-serialised. It is just a container for data. PowerShell is unusual in that it can include scripts in objects, as ScriptMethods and ScriptProperties, so it is theoretically possible to transfer both between PowerShell applications, but this is out of the scope of this article.
 
 You’ve got some choice in PowerShell of how you serialize objects into structured documents, and back again. The two built-in formats are XML and JSON. I’ll be showing you how to get to use a third: YAML.
 
-## Why YAML?
+== Why YAML?
 
 You’d need a good reason for not using XML. It is the obvious format for juggling with data. PowerShell allows you to query it and treat it as an object. If you use XML Schemas, you have a very robust system.
 The downside of XML is that it is complex, arcane, and the XML documents can’t be easily read or altered by humans. It can take a long time to process.
@@ -98,8 +97,8 @@ The downside of XML is that it is complex, arcane, and the XML documents can’t
 JSON is popular because it is so simple that any language can be used to read or write it. The downside is that it doesn’t do much, and has a restricted range of datatypes. You can’t actually specify the data type of a value, for example. It isn’t an intuitive way of laying data out on the page.
 YAML is a formalization of the way that we used to lay out taxonomies and forms of structured data before computers. It is easy to understand. When you start doing bulleted lists within lists, it starts to look like YAML. As far as readability goes, here is YAML document
 
-```yaml
----
+[source,yaml]
+----- 
 phil:
   name: Phil Factor
   job: Developer
@@ -115,12 +114,10 @@ phil:
    - TSQL
    - fortran
    - cobol 
-```
-
-
+-----   
 And here is the same in JSON.
-
-```json
+[source,json]
+-----
 [ { phil: 
    { name: 'Phil Factor',
     job: 'Developer',
@@ -129,13 +126,14 @@ And here is the same in JSON.
    { name: 'Derek DBA',
     job: 'DBA',
     skills: [ 'TSQL', 'fortran', 'cobol' ] } } ]
-```
+-----
 
 I haven’t really the space in this article for the XML version. 
 
 YAML is officially now a superset of JSON, and so a YAML serializer can usually be persuaded to use the JSON ‘brackety’ style if you prefer, or require, that. The PSYaml module has a function just to convert from the indented dialect of YAML to the 'Brackety' dialect aka JSON. Beware that not everything in YAML will convert to JSON so it is possible to get errors in consequence. 
 
-```powershell
+[source,powershell]
+----
 import-module psyaml
 Convert-YAMLtoJSON @"
 # Employee records
@@ -155,14 +153,15 @@ Convert-YAMLtoJSON @"
       - fortran
       - cobol
 "@
-```
+----
 which will give ...
 
-```json
+[source,json]
+----
 
 [{"phil": {"name": "Phil Factor", "job": "Developer", "skills": ["SQL", "python", "perl", "pascal"]}}, {"derek": {"name": "Derek DBA", "job": "DBA", "skills": ["TSQL", "fortran", "cobol"]}}]
 
-```
+----
 
 YAML also allows you to specify the data type of its values explicitly. If you wish to ensure that a datatype is read correctly, and Mr and Mrs Null will agree with me on this, you can precede the value with !!float, !!int, !!null, !!timestamp, !!bool, !!binary, !!Yaml or !!str. These are the most common YAML datatypes that you are likely to across, and any deserializer must cope with them. YAML also allows you to specify a data type that is specific to a particular language or framework, such as geographic coordinates. YAML also contains references, which refer to an existing element in the same document. So, if an element is repeated later in a YAML document, you can simply refer to the element using a short-hand name.
 
@@ -171,28 +170,31 @@ Another advantage to YAML is that you can specify the type of set or sequence, a
 I use YAML a great deal for documentation and for configuration settings. I started off by using PowerYAML which is a thin layer around YamlDotNet. Unfortunately, although YamlDotNet is excellent, PowerYAML hadn’t implemented any serialiser, hadn’t implemented data type tags, and couldn’t even auto-detect the data type. As it wasn’t being actively maintained, and was incompatible with the current version of the YamlDotNet library that was doing all the heavy work, I wrote my own module using YamlDotNet directly.
 
 You merely load the module:
-```powershell
+[source,powershell]
+----
 import-module psyaml 
-```
+----
 
 and you will have a number of functions that you require.
 
 You don’t really need a special module, of course. Using YamlDotNet directly isn’t a big deal if you don't want to bother with PSYaml. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
-
-```powershell
+[source,powershell]
+----
 nuget install yamldotnet 
-```
+----
 
 Don’t worry about this unless you would like to work directly with YamlDotNet for special purposes. In my module, I have a function that does all this for you and allows you to keep up-to-date with the latest version of YamlDotNet. 
 
 In our simple PowerShell script we load this library
 
-```powershell
+[source,powershell]
+----
 Add-Type -Path "$OurPathTo\yamldotnet.dll" #where $OurPathTo is the actual path 
-```
+----
 And we can then create some simple functions
 
-```powershell
+[source,powershell]
+----
 Function YAMLSerialize
     {
     [CmdletBinding()]
@@ -225,11 +227,12 @@ $Deserializer=New-Object -TypeName YamlDotNet.Serialization.Deserializer -Argume
 $Deserializer.Deserialize([System.IO.TextReader]$stringReader)
 }
 
-```
+----
 This will give us the basics. Naturally, there is a lot more we can, and will, do; but this will get you started. Of course, this is all done for you in PSYaml and you can access these very functions. 
 
 Now we just want a simple YAML string to test out the plumbing.
-```powershell
+[source,powershell]
+----
     $YamlString =@"
     invoice: !!int 34843
     date   : 2001-01-23
@@ -262,18 +265,20 @@ Now we just want a simple YAML string to test out the plumbing.
         Billsmer @ 338-4338.
 
 "@ 
-```
+----
 
 So let’s create a PowerShell object, and convince ourselves that it can read it in correctly by taking the object it produced, accessing properties from it and then outputting it as JSON.
 
-```powershell
+[source,powershell]
+----
 YAMLSerialize (YAMLDeserialize $yamlString) 
-```
+----
 
 You should get the simple invoice back again. Job done? Well, possibly, but if you need to process the results in PowerShell, you may still hit problems. 
 You’d expect, from using ConvertFrom-JSON, that this would work:
 
-```powershell
+[source,powershell]
+----
 $MyInvoice=YAMLDeserialize $yamlString
 $BillTo=$MyInvoice.'bill-to' 
 
@@ -281,11 +286,12 @@ $BillTo=$MyInvoice.'bill-to'
  $($BillTo.address.lines)$($BillTo.address.city)
 $($BillTo.address.state)
 ($($BillTo.address.postal))" 
-```
+----
 
 But it doesn’t. What is also bad is that in the PowerShell IDE, you haven’t got the intellisense prompt for the object either. You want the equivalent of this to happen with YAML
 
-```powershell
+[source,powershell]
+----
 $JSONInvoice=convertFrom-JSON @'
 {
   "invoice": 34843,
@@ -327,12 +333,12 @@ $BillTo=$jsonInvoice.'bill-to'
  $($BillTo.address.lines)$($BillTo.address.city)
 $($BillTo.address.state)
 ($($BillTo.address.postal))" 
-```
+----
 
-...and whatever else in terms of accessing the data via dot notation that you care to try. 
+…and whatever else in terms of accessing the data via dot notation that you care to try. 
 The problem is that the YAML deserialiser creates NET objects, which is entirely correct and useful, but it is just more convenient to have PowerShell objects to make them full participants.
 
-## Refining the Deserializing process. 
+== Refining the Deserializing process. 
 
 Generally speaking, a good library for parsing and emitting data documents does so in two phases. The main work on a string containing XML, YAML, CSV or JSON is to create a representational model. The second phase is to turn that representational model into real data structures that are native to your computer language. 
 
@@ -341,8 +347,8 @@ In the case of YAML, you can have several separate documents in a single YAML st
 A typical YAML library will parse the presentation stream and compose the Representation Graph. The final input process is to construct the native data structures from the YAML representation. The advantage of this is that you can then specify how your special data types are treated in the conversion process. Because YAML is a superset of JSON, you still have to allow untyped values that then have to be checked to see what sort of data it contains.
 
 Here is a routine that takes as a parameter a representational model and converts it into a PowerShell object. It is easy to check this by converting the resulting object to XML or JSON or even YAML.
-
-```powershell
+[source,powershell]
+----
 function ConvertFrom-YAMLDocument
 {
     [CmdletBinding()]
@@ -403,31 +409,31 @@ function ConvertFrom-YAMLDocument
     else { Write-Verbose "Unrecognised token $TheTypeOfNode" }
     $TheObject
 } 
-```
-
+----
 In order to use this, all you need to do is to load the text of the YAML document into a YAML stream.
-
-```powershell
+[source,powershell]
+----
   $stringReader = new-object System.IO.StringReader([string]$yamlString)
   $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
   $yamlStream.Load([System.IO.TextReader]$stringReader)
   ConvertFrom-YAMLDocument ($yamlStream.Documents[0])
-```
+----
 
 So there you have it. We now wrap this last code in a function and we have a PowerShell module that we can use whenever we need to parse YAML. I won’t bother to list that here as I’ve put it on GitHub for you. 
 
 I also have added ConvertTo-YAML, because this is handy if you need plenty of control over the way that your PowerShell objects are serialized. Some of these objects are very unwieldy, with a lot of irrelevant information, and if you try serializing them without any sort of filtering, you will accidentally contribute to the Big Data crisis.
 
 Last but most important, I wanted a way of loading a third party .net library into a module from nuget. I therefore added a function to add the library using add-Type, but which checked to make sure that everything was there first, and load it in the right place if it wasn’t. You can call it explicitly to check that you have the latest version of YamlDotNet. If it breaks something, you just delete the directory that it put the new version in: The module always loads the latest version in the YamlDotNet directory that it can find.
-
-```powershell
+[source,powershell]
+----
 Initialize-PsYAML_Module $True
-```
+----
 
-## Simple Example of use
+== Simple Example of use
 Here is a way of producing a YAML result from any SQL expression on a database
 
-```powershell
+[source,powershell]
+----
 import-module psyaml
 $SourceTable = 'production.location'
 $Sourceinstance = 'YourInstanceName'
@@ -465,11 +471,11 @@ finally
 {
     $reader.close()
 }
-```
-
+----
 This will give the result (just the first three rows)
 
-```powershell
+[source,powershell]
+----
 - CostRate: 0.0000
   ModifiedDate: 06/01/1998 00:00:00
   Name: Tool Crib
@@ -486,10 +492,12 @@ This will give the result (just the first three rows)
   Availability: 0.00
   LocationID: 3
 #and so on...  
-```
-## So what is the point of all this?
-Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to [specify your data type](http://www.yaml.org/type). You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of [timestamp](http://www.yaml.org/type/timestamp.html), [binary](http://www.yaml.org/type/binary.html), [str](http://www.yaml.org/type/str.html), [bool](http://www.yaml.org/type/bool.html), [float](http://www.yaml.org/type/float.html), [int](http://www.http://yaml.org/type/int.html) and [null](http://www.yaml.org/type/null.html). If there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
+----
+== So what is the point of all this?
+Besides the fact that it is an intuitive way of representing data, one of the most important advantages of YAML over JSON is that YAML allows you to http://www.yaml.org/type[specify your data type]. You don't need to in YAML, but it can resolve ambiguity. I've implemented the standard YAML scalar tags of http://www.yaml.org/type/timestamp.html[timestamp], http://www.yaml.org/type/binary.html[binary], http://www.yaml.org/type/str.html[str], http://www.yaml.org/type/bool.html[bool], http://www.yaml.org/type/float.html[float], http://www.http://yaml.org/type/int.html[int] and http://www.yaml.org/type/null.html[null]. if there is no scalar tag, I also autodetect a string to try to get it to the right data type. 
 
-YAML also has a rather crude way of allowing you to represent relational data by means of [node](http://www.yaml.org/spec/1.2/spec.html#node//) Anchors. These A have an '&' prefix. An [alias node](http://www.yaml.org/spec/1.2/spec.html#alias//) can then be used to indicate additional inclusions of the anchored node. It means that you don't have to repeat nodes in a document. You just write it once and then refer to the node by its anchor.
+YAML also has a rather crude way of allowing you to represent relational data by means of http://www.yaml.org/spec/1.2/spec.html#node//[node] Anchors. These A have an '&' prefix. An http://www.yaml.org/spec/1.2/spec.html#alias//[alias node] can then be used to indicate additional inclusions of the anchored node. It means that you don't have to repeat nodes in a document. You just write it once and then refer to the node by its anchor.
 
-I find YAML to be very useful. What really convinces me of the power of YAML is to be able to walk the representational model to do special-purpose jobs such as processing hierarchical data to load into SQL. It is at that point that I finally decided that YAML had a lot going for it as a format of data document.
+I find YAML to be very useful. What really convinces me of the power of YAML is to be able to walk the representational model to do special-purpose jobs such as processing hierarchical data to load into SQL. It is at that point that I finally decided that YAML had a lot going for it as a format of data document. 
+
+
