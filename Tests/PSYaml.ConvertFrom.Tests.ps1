@@ -5,7 +5,9 @@ $ModuleName = "PSYaml"
 $PSVersion = $PSVersionTable.PSVersion.Major
 
 #Force Import this repo's module
-Import-Module $PSScriptRoot\..\$ModuleName\$ModuleName.psm1 -Force
+Import-Module "$($PSScriptRoot)\..\$($ModuleName)\$($ModuleName).psm1" -Force
+$libPath = "$($PSScriptRoot)\..\$($ModuleName)\lib\YamlDotNet.dll"
+Add-Type -Path $libPath
 
 $yaml = @"
 anArray:
