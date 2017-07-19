@@ -1,5 +1,6 @@
 # PSYaml
 
+<<<<<<< HEAD
 ## Build Status
 
 |Branch | Status |
@@ -10,6 +11,10 @@
 
 ## Introduction
 This module will help users convert from/to YAML. For more information see [the documentation](./Documentation.adoc).
+=======
+# Introduction
+This module will help users convert from/to YAML. For more information see [the documentation](./Documentation.md).
+>>>>>>> 48e8c570dd87b44152968af4c6dcea50f8737a58
 
 Please note that the **Master** branch has the latest, ready-for-production version. The **release/stage** branch is the holding ground for master merges where integration testing will take place. Other branches with active development will be denoted by having a prefix ( **feature/**, **bugfix/**, **release/**, etc) followed by an unique identifier. Nothing is merged into **release/stage** branch without code review, and only code that passes testing in the **release/stage** branch will be merged into **master**.
 
@@ -46,7 +51,7 @@ Author: Phil-Factor, Brian Marsh
 ## Release Notes
 |  Version  | Change Log                                                        |
 | :-------: | ----------------------------------------------------------------- |
-|  1.0.1.1  | Reformated several sections for readability, added pester tests   |
+|  1.0.2    | Reformated several sections for readability, added pester tests   |
 |  1.0.1    | Converted single psm1 file to multiple public/private functions   |
 
 ## Installation

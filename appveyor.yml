@@ -6,8 +6,15 @@ skip_commits:
   message: /updated readme.*/
 
 install:
+<<<<<<< HEAD
 # Install Package Provider to install PsScriptAnalyzer
   - ps: Install-Module Pester -Force
+=======
+# Install Pester for testing
+  - cinst pester
+# Install Package Provider to install PsScriptAnalyzer
+  - ps: Install-PackageProvider -Name NuGet -Force
+>>>>>>> 48e8c570dd87b44152968af4c6dcea50f8737a58
 # Install PsScriptAnalyzer to ensure we are following powershell best practices
   - ps: Install-Module PsScriptAnalyzer -Force
 
