@@ -2,55 +2,30 @@
 
 PSYaml is a simple PowerShell module that allows you to serialize PowerShell objects to "Yet Another Markup Language" (YAML) documents and deserialize YAML documents to PowerShell objects. It uses [Antoine Aubry's](http://aaubry.net) [excellent YamlDotNet library](http://aaubry.net/pages/yamldotnet.html).
 
-Prior versions of this module required that you manually procure and move the .NET library into a folder before the module would function
-To start, you can simply load the PowerShell file and the manifest from its home on GitHub [PSYaml](https://github.com/Phil-Factor/PSYaml) into this directory or use a script that I provide in the next listing
+Prior versions of this module required that you manually procure and move the .NET library into a folder before the module would function. For reference, please reference the [legacy documentation](.\Documentation.adoc).
 
-```powershell
-$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml 
-```
-
-I do it, or update it, via a script like this.  
-
-```powershell
-
-Add-Type -assembly "system.io.compression.filesystem"
-# for the unzipping operation
-$YAMLDotNetLocation = "$($env:USERPROFILE)\Documents\WindowsPowerShell\Modules\PSYaml"
-# the location of the module
-if (!(test-path "$($YAMLDotNetLocation)\YAMLdotNet")) #if the location doesn't exist
-    {New-Item -ItemType Directory -Force -Path "$($YAMLDotNetLocation)\YAMLdotNet"} #create the location
-$client = new-object Net.WebClient #get a webclient to fetch the files
-$client.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-$client.DownloadFile('https://github.com/Phil-Factor/PSYaml/archive/master.zip',"$($YAMLDotNetLocation)PSYAML.zip")
-if ((test-path "$($YAMLDotNetLocation)\PSYaml-master")) #delete the existing version if it exists
-    { Remove-Item "$($YAMLDotNetLocation)\PSYaml-master"-recurse -force}
-[io.compression.zipfile]::ExtractToDirectory("$($YAMLDotNetLocation)PSYAML.zip", $YAMLDotNetLocation)
-Copy-Item "$YAMLDotNetLocation\PSYaml-master\*.*" $YAMLDotNetLocation #copy it into pleace
-```
-
-Beware that you need to be clear about your  execution policy before you start and check the file before you load the module. Once you are ready, you can load the module into your PowerShell session like this. 
+## Usage
 
 ```powershell
 import-module psyaml 
 ```
-The first time you do it, you need to be connected to the internet so it can load the latest version of the YamlDotNet library from NuGet.
-
 Once the module is in place and working, you can execute code like this 
 ```powershell
 [ordered]@{
- Computername = $(Get-wmiobject win32_operatingsystem).csname
- OS = $(Get-wmiobject win32_operatingsystem).caption
- 'Uptime (hours)' = ((get-date) - ([wmiclass]"").ConvertToDateTime((Get-wmiobject win32_operatingsystem).LastBootUpTime)).Hours
- Make = $(get-wmiobject win32_computersystem).model
- Manufacturer = $(get-wmiobject win32_computersystem).manufacturer
- 'Memory (Gb)' = $(Get-WmiObject win32_computersystem).TotalPhysicalMemory/1GB -as [int]
- Processes = (Get-Process).Count
- drives =  Get-WmiObject Win32_logicaldisk|select DeviceID, description
- } |ConvertTo-YAML 
+    Computername = $(Get-wmiobject win32_operatingsystem).csname
+    OS = $(Get-wmiobject win32_operatingsystem).caption
+    'Uptime (hours)' = ((get-date) - ([wmiclass]"").ConvertToDateTime((Get-wmiobject win32_operatingsystem).LastBootUpTime)).Hours
+    Make = $(get-wmiobject win32_computersystem).model
+    Manufacturer = $(get-wmiobject win32_computersystem).manufacturer
+    'Memory (Gb)' = $(Get-WmiObject win32_computersystem).TotalPhysicalMemory/1GB -as [int]
+    Processes = (Get-Process).Count
+    drives =  Get-WmiObject Win32_logicaldisk|select DeviceID, description
+ } | ConvertTo-YAML 
 ```
 to give you a YAML representation of the data that is easy to assimilate.
  
 ```yaml
+---
   Computername: 'LTPFACTOR' 
   OS: 'Microsoft Windows 8.1 Enterprise' 
   Uptime (hours): 21 
@@ -131,8 +106,6 @@ And here is the same in JSON.
     skills: [ 'TSQL', 'fortran', 'cobol' ] } } ]
 ```
 
-I haven’t really the space in this article for the XML version. 
-
 YAML is officially now a superset of JSON, and so a YAML serializer can usually be persuaded to use the JSON ‘brackety’ style if you prefer, or require, that. The PSYaml module has a function just to convert from the indented dialect of YAML to the 'Brackety' dialect aka JSON. Beware that not everything in YAML will convert to JSON so it is possible to get errors in consequence. 
 
 ```powershell
@@ -164,7 +137,7 @@ which will give ...
 
 ```
 
-YAML also allows you to specify the data type of its values explicitly. If you wish to ensure that a datatype is read correctly, and Mr and Mrs Null will agree with me on this, you can precede the value with !!float, !!int, !!null, !!timestamp, !!bool, !!binary, !!Yaml or !!str. These are the most common YAML datatypes that you are likely to across, and any deserializer must cope with them. YAML also allows you to specify a data type that is specific to a particular language or framework, such as geographic coordinates. YAML also contains references, which refer to an existing element in the same document. So, if an element is repeated later in a YAML document, you can simply refer to the element using a short-hand name.
+YAML also allows you to specify the data type of its values explicitly. If you wish to ensure that a datatype is read correctly, and Mr and Mrs Null will agree with me on this, you can precede the value with `!!float`, `!!int`, `!!null`, `!!timestamp`, `!!bool`, `!!binary`, `!!Yaml` or `!!str`. These are the most common YAML datatypes that you are likely to across, and any deserializer must cope with them. YAML also allows you to specify a data type that is specific to a particular language or framework, such as geographic coordinates. YAML also contains references, which refer to an existing element in the same document. So, if an element is repeated later in a YAML document, you can simply refer to the element using a short-hand name.
 
 Another advantage to YAML is that you can specify the type of set or sequence, and whether it is ordered or unordered. It is much more attuned to the rich variety of data that is around.
 
@@ -177,19 +150,8 @@ import-module psyaml
 
 and you will have a number of functions that you require.
 
-You don’t really need a special module, of course. Using YamlDotNet directly isn’t a big deal if you don't want to bother with PSYaml. You just need to import a single library. To get hold of the latest version of YAML.net, you should get it from NuGet. You’d get hold of Nuget.exe and run
+We bundle the YamlDotNet library with the module to streamline module usage.
 
-```powershell
-nuget install yamldotnet 
-```
-
-Don’t worry about this unless you would like to work directly with YamlDotNet for special purposes. In my module, I have a function that does all this for you and allows you to keep up-to-date with the latest version of YamlDotNet. 
-
-In our simple PowerShell script we load this library
-
-```powershell
-Add-Type -Path "$OurPathTo\yamldotnet.dll" #where $OurPathTo is the actual path 
-```
 And we can then create some simple functions
 
 ```powershell
