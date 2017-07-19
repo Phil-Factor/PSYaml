@@ -29,7 +29,7 @@ if ($PSVersion -ne 5)
 {
     Describe "Should convert a PSObject to YAML in PowerShell v$($PSVersion)" {
         BeforeEach {
-            Remove-Variable -Name Yaml -ErrorAction SilentlyContinue
+            Remove-Variable -Name Yaml, ConvertedObj -ErrorAction SilentlyContinue
             
             $Yaml = ConvertTo-Yaml $PSObj
             
@@ -40,8 +40,8 @@ if ($PSVersion -ne 5)
             Set-StrictMode -Version $PSversion
 
             It 'Should convert yaml back to PSObject' {
-                $ConvertedObj = $Yaml | ConvertFrom-Yaml
-                $Output = Foreach ($Key in $ConvertedObj.Keys)
+                $ConvertedObj = ConvertFrom-Yaml $Yaml
+                $Output = Foreach ($Key in $PSObj.Keys)
                 {
                     Compare-Object $ConvertedObj.$Key $PSObj.$Key
                 }
@@ -54,7 +54,7 @@ if ($PSVersion -ne 5)
 
 Describe "Should convert a PSObject to YAML in PowerShell v5" {
     BeforeEach {
-            Remove-Variable -Name Yaml -ErrorAction SilentlyContinue
+            Remove-Variable -Name Yaml, ConvertedObj -ErrorAction SilentlyContinue
             
             $Yaml = ConvertTo-Yaml $PSObj
         }
@@ -64,8 +64,8 @@ Describe "Should convert a PSObject to YAML in PowerShell v5" {
         Set-StrictMode -Version 5
 
         It 'Should convert yaml back to PSObject' {
-            $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            $ConvertedObj = ConvertFrom-Yaml $Yaml
+            $Output = Foreach ($Key in $PSObj.Keys)
             {
                 Compare-Object $ConvertedObj.$Key $PSObj.$Key
             }
@@ -77,7 +77,7 @@ Describe "Should convert a PSObject to YAML in PowerShell v5" {
 
 Describe "Should convert a PSObject to YAML in PowerShell v4" {
     BeforeEach {
-            Remove-Variable -Name Yaml -ErrorAction SilentlyContinue
+            Remove-Variable -Name Yaml, ConvertedObj -ErrorAction SilentlyContinue
             
             $Yaml = ConvertTo-Yaml $PSObj
         }
@@ -87,8 +87,8 @@ Describe "Should convert a PSObject to YAML in PowerShell v4" {
         Set-StrictMode -Version 4
 
         It 'Should convert yaml back to PSObject' {
-            $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            $ConvertedObj = ConvertFrom-Yaml $Yaml
+            $Output = Foreach ($Key in $PSObj.Keys)
             {
                 Compare-Object $ConvertedObj.$Key $PSObj.$Key
             }
@@ -100,7 +100,7 @@ Describe "Should convert a PSObject to YAML in PowerShell v4" {
 
 Describe "Should convert a PSObject to YAML in PowerShell v3" {
     BeforeEach {
-            Remove-Variable -Name Yaml -ErrorAction SilentlyContinue
+            Remove-Variable -Name Yaml, ConvertedObj -ErrorAction SilentlyContinue
             
             $Yaml = ConvertTo-Yaml $PSObj
         }
@@ -110,8 +110,8 @@ Describe "Should convert a PSObject to YAML in PowerShell v3" {
         Set-StrictMode -Version 3
 
         It 'Should convert yaml back to PSObject' {
-            $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            $ConvertedObj = ConvertFrom-Yaml $Yaml
+            $Output = Foreach ($Key in $PSObj.Keys)
             {
                 Compare-Object $ConvertedObj.$Key $PSObj.$Key
             }
@@ -123,7 +123,7 @@ Describe "Should convert a PSObject to YAML in PowerShell v3" {
 
 Describe "Should convert a PSObject to YAML in PowerShell v2" {
     BeforeEach {
-            Remove-Variable -Name Yaml -ErrorAction SilentlyContinue
+            Remove-Variable -Name Yaml, ConvertedObj -ErrorAction SilentlyContinue
             
             $Yaml = ConvertTo-Yaml $PSObj
         }
@@ -133,8 +133,8 @@ Describe "Should convert a PSObject to YAML in PowerShell v2" {
         Set-StrictMode -Version 2
 
         It 'Should convert yaml back to PSObject' {
-            $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            $ConvertedObj = ConvertFrom-Yaml $Yaml
+            $Output = Foreach ($Key in $PSObj.Keys)
             {
                 Compare-Object $ConvertedObj.$Key $PSObj.$Key
             }
