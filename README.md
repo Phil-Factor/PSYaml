@@ -15,10 +15,11 @@ Please note that the **Master** branch has the latest, ready-for-production vers
 
 ## Features
 * Fancy Logo
-* Bundled binary 
+* Bundled binary
+* Pester Testing
 
 ## ToDo
-* Add automatic testing of all public functions
+* Clean up documentation
 
 ## Example Usage
 ```PowerShell
