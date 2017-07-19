@@ -5,6 +5,7 @@
 |Branch | Status |
 |-------|:--------:|
 |Master |[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/pezhore/PSYaml?branch=master&svg=true)](https://ci.appveyor.com/project/pezhore/PSYaml/branch/master)|
+|release/stage |[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/pezhore/PSYaml?branch=release/stage&svg=true)](https://ci.appveyor.com/project/pezhore/PSYaml/branch/release/stage)|
 
 <img src=".\Media\YAML_PS.png" height="200" align="right" />
 
