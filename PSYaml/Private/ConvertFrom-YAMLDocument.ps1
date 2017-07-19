@@ -1,4 +1,3 @@
-
 function ConvertFrom-YAMLDocument
 {
 <#
