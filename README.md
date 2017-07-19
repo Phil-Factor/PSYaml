@@ -7,6 +7,7 @@
 |Master |[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/pezhore/PSYaml?branch=master&svg=true)](https://ci.appveyor.com/project/pezhore/PSYaml/branch/master)|
 
 <img src=".\Media\YAML_PS.png" height="200" align="right" />
+
 ## Introduction
 This module will help users convert from/to YAML. For more information see [the documentation](./Documentation.adoc).
 
