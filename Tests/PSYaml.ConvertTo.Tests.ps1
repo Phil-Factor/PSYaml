@@ -10,7 +10,6 @@ $libPath = "$($PSScriptRoot)\..\$($ModuleName)\lib\YamlDotNet.dll"
 Add-Type -Path $libPath
 
 $YamlText = @"
-
   anArray:
   - 1
   - 2
@@ -22,7 +21,6 @@ $YamlText = @"
     - 'an'
     - 'array'
   hello: 'world'
-
 "@
 
 $PSObj = ConvertFrom-Yaml $YamlText
@@ -43,7 +41,12 @@ if ($PSVersion -ne 5)
 
             It 'Should convert yaml back to PSObject' {
                 $ConvertedObj = $Yaml | ConvertFrom-Yaml
-                $ConvertedObj | Should match $PSObj
+                $Output = Foreach ($Key in $ConvertedObj.Keys)
+                {
+                    Compare-Object $ConvertedObj.$Key $PSObj.$Key
+                }
+
+                $Output | Should be $null
             }
         }
     }
@@ -62,7 +65,12 @@ Describe "Should convert a PSObject to YAML in PowerShell v5" {
 
         It 'Should convert yaml back to PSObject' {
             $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $ConvertedObj | Should match $PSObj
+            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            {
+                Compare-Object $ConvertedObj.$Key $PSObj.$Key
+            }
+
+            $Output | Should be $null
         }
     }
 }
@@ -80,7 +88,12 @@ Describe "Should convert a PSObject to YAML in PowerShell v4" {
 
         It 'Should convert yaml back to PSObject' {
             $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $ConvertedObj | Should match $PSObj
+            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            {
+                Compare-Object $ConvertedObj.$Key $PSObj.$Key
+            }
+
+            $Output | Should be $null
         }
     }
 }
@@ -98,7 +111,12 @@ Describe "Should convert a PSObject to YAML in PowerShell v3" {
 
         It 'Should convert yaml back to PSObject' {
             $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $ConvertedObj | Should match $PSObj
+            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            {
+                Compare-Object $ConvertedObj.$Key $PSObj.$Key
+            }
+
+            $Output | Should be $null
         }
     }
 }
@@ -116,7 +134,12 @@ Describe "Should convert a PSObject to YAML in PowerShell v2" {
 
         It 'Should convert yaml back to PSObject' {
             $ConvertedObj = $Yaml | ConvertFrom-Yaml
-            $ConvertedObj | Should match $PSObj
+            $Output = Foreach ($Key in $ConvertedObj.Keys)
+            {
+                Compare-Object $ConvertedObj.$Key $PSObj.$Key
+            }
+
+            $Output | Should be $null
         }
     }
 }
