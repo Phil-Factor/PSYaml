@@ -1,0 +1,26 @@
+# See http://www.appveyor.com/docs/appveyor-yml for many more options
+
+# Skip on updates to the readme.
+# We can force this by adding [skip ci] or [ci skip] anywhere in commit message
+skip_commits:
+  message: /updated readme.*/
+
+install:
+
+# Install Package Provider to install PsScriptAnalyzer
+  - ps: Install-Module Pester -Force
+
+# Install PsScriptAnalyzer to ensure we are following powershell best practices
+  - ps: Install-Module PsScriptAnalyzer -Force
+
+# We aren't building any artifacts
+build: false
+
+# The magic for testing goes here!
+test_script:
+# Invoke pester, but output each test as UnitXML
+  - ps: $res = Invoke-Pester -Path ".\Tests" -OutputFormat NUnitXml -OutputFile TestsResults.xml -PassThru
+# Upload the xml to appveyor
+  - ps: (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestsResults.xml))
+# If any failed, fail the build
+  - ps: if ($res.FailedCount -gt 0) { throw "$($res.FailedCount) tests failed."}
