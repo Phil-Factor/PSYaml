@@ -107,6 +107,7 @@ function ConvertFrom-YAMLDocument
         $theNode | ForEach-Object{ 
                                     $TheObject += ConvertFrom-YAMLDocument $_ 
                                  }
+        return ,$TheObject
     }
     else
     {
