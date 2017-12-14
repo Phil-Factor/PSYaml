@@ -10,7 +10,7 @@
 <img src=".\Media\YAML_PS.png" height="200" align="right" />
 
 ## Introduction
-This module will help users convert from/to YAML. For more information see [the documentation](./Documentation.adoc).
+This module will help users convert from/to YAML. For more information see [the documentation](./Documentation.md).
 
 Please note that the **Master** branch has the latest, ready-for-production version. The **release/stage** branch is the holding ground for master merges where integration testing will take place. Other branches with active development will be denoted by having a prefix ( **feature/**, **bugfix/**, **release/**, etc) followed by an unique identifier. Nothing is merged into **release/stage** branch without code review, and only code that passes testing in the **release/stage** branch will be merged into **master**.
 
