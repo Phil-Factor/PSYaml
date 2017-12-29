@@ -24,7 +24,7 @@ Please note that the **Master** branch has the latest, ready-for-production vers
 ## Example Usage
 ```PowerShell
 import-module psyaml
-$yaml = @"
+$yamlString = @"
 anArray:
 - 1
 - 2
