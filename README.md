@@ -47,6 +47,7 @@ Author: Phil-Factor, Brian Marsh
 ## Release Notes
 |  Version  | Change Log                                                        |
 | :-------: | ----------------------------------------------------------------- |
+|  1.0.3    | Closed the open YAML file if error occurs in it during parsing    |
 |  1.0.2    | Reformated several sections for readability, added pester tests   |
 |  1.0.1    | Converted single psm1 file to multiple public/private functions   |
 
