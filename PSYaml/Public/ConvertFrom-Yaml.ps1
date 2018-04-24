@@ -38,17 +38,26 @@ function ConvertFrom-Yaml {
 BEGIN { }
 PROCESS
     {
-        If($Path){
-            $streamReader = [System.IO.File]::OpenText($Path)
+        try {
+            If($Path) {
+                $streamReader = [System.IO.File]::OpenText($Path)
+            }
+            Else {
+                $streamReader = new-object System.IO.StringReader([string]$yamlString)
+            }
+
             $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
             $yamlStream.Load([System.IO.TextReader]$streamReader)
             ConvertFrom-YAMLDocument ($yamlStream.Documents[0])
         }
-        Else{
-            $stringReader = new-object System.IO.StringReader([string]$yamlString)
-            $yamlStream = New-Object YamlDotNet.RepresentationModel.YamlStream
-            $yamlStream.Load([System.IO.TextReader]$stringReader)
-            ConvertFrom-YAMLDocument ($yamlStream.Documents[0])
+        Catch {
+            Write-Error $_
+        }
+        Finally {
+            if ($streamReader.Basestream -ne $null)
+            {
+                $streamReader.Close()
+            }
         }
     }
 END {}
