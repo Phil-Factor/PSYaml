@@ -7,7 +7,7 @@ function ConvertTo-Yaml
    This produces YAML from any object you pass to it. It isn't suitable for the huge objects produced by some of the cmdlets such as Get-Process, but fine for simple objects
  .EXAMPLE
    $array=@()
-   $array+=Get-Process wi* |  Select-Object-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
+   $array+=Get-Process wi* |  Select-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
    ConvertTo-YAML $array
 
  .PARAMETER Object 
