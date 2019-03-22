@@ -214,8 +214,9 @@ function ConvertTo-Yaml
                 'Array'    { "$($inputObject | Foreach-Object { "`r`n$padding- $(ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
                 'HashTable'{
                     ("$($inputObject.GetEnumerator() | Foreach-Object {
-                                "`r`n$padding  $($_.Name): " +
-                                (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
+                      if ($_.Value.GetType().Name -eq 'String'){$increment=2} else {$Increment=1}
+                       "`r`n$padding  $($_.Name): " +
+                          (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
                             })")
                 }
                 'Dictionary`2'{
