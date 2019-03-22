@@ -157,6 +157,7 @@ function ConvertTo-Yaml
                         # right, we have to format it to YAML spec.
                         $folded = ">`r`n" # signal that we are going to use the readable 'newlines-folded' format
                         $string.Split("`n") | ForEach-Object {
+                            $_=$_ -replace "\r$"
                             $length = $_.Length
                             $IndexIntoString = 0
                             $wrap = 80
@@ -189,11 +190,11 @@ function ConvertTo-Yaml
 
                             if ($IndexIntoString -lt $length)
                             {
-                                $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n`r`n"
+                                $folded += $padding + $_.Substring($IndexIntoString).Trim() + "`r`n"
                             }
                             else
                             {
-                                $folded += "`r`n`r`n"
+                                $folded += "`r`n"
                             }
                         }
                         $folded
