@@ -45,7 +45,7 @@ function Initialize-PsYAML_Module
     
 }
 
-Initialize-PsYAML_Module
+#Initialize-PsYAML_Module
 
 
 function Install-PSYamlModule
