@@ -9,7 +9,6 @@ function ConvertTo-Yaml
    $array=@()
    $array+=Get-Process wi* |  Select-Object Handles,NPM,PM,WS,VM,CPU,Id,ProcessName 
    ConvertTo-YAML $array
-
  .PARAMETER Object 
    the object that you want scripted out
  .PARAMETER Depth
@@ -38,11 +37,11 @@ function ConvertTo-Yaml
         # if it is null return null
         If ( !($inputObject) )
         {
-            $p += 'null'
-            return $p
+            
+            return ''
         } 
 
-        if ($NestingLevel -eq 0) { '---' }
+        if ($NestingLevel -eq 0) {$Output= "---`r`n" } else {$output=''}
         
         $padding = [string]'  ' * $NestingLevel # lets just create our left-padding for the block
         try
@@ -108,7 +107,7 @@ function ConvertTo-Yaml
             }
             write-verbose "$($padding)Type:='$Type', Object type:=$($inputObject.GetType().Name), BaseName:=$($inputObject.GetType().BaseType.Name) "
             
-            switch ($Type)
+            $output += switch ($Type)
             {
                 'ScriptBlock'{ "{$($inputObject.ToString())}" }
                 'InnerXML'        { "|`r`n" + ($inputObject.OuterXMl.Split("`r`n") | ForEach-Object{ "$padding$_`r`n" }) }
@@ -216,7 +215,7 @@ function ConvertTo-Yaml
                     ("$($inputObject.GetEnumerator() | Foreach-Object {
                       if ($_.Value.GetType().Name -eq 'String'){$increment=2} else {$Increment=1}
                        "`r`n$padding  $($_.Name): " +
-                          (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + 1))
+                          (ConvertTo-YAML -inputObject $_.Value -depth $depth -NestingLevel ($NestingLevel + $increment))
                             })")
                 }
                 'Dictionary`2'{
@@ -227,9 +226,9 @@ function ConvertTo-Yaml
                 }
                 'PSObject' { ("$($inputObject.PSObject.Properties | Foreach-Object { "`r`n$padding $($_.Name): " + (ConvertTo-YAML -inputObject $_ -depth $depth -NestingLevel ($NestingLevel + 1)) })") }
                 'generic'  { "$($inputObject.Keys | Foreach-Object { "`r`n$padding  $($_):  $(ConvertTo-YAML -inputObject $inputObject.$_ -depth $depth -NestingLevel ($NestingLevel + 1))" })" }
-                'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
-                'XML'   { ("$($inputObject | Get-Member -membertype properties | Where-Object-object { @('xml', 'schema') -notcontains $_.name } | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
-                'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object-Object name | Foreach-Object { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
+                'Object'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $NestingLevel -NestingLevel ($NestingLevel + 1))" })") }
+                'XML'   { ("$($inputObject | Get-Member -membertype properties | Where-Object { @('xml', 'schema') -notcontains $_.name } | Select-Object name | Foreach-Object { "`r`n$padding $($_.name):   $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
+                'DataRow'   { ("$($inputObject | Get-Member -membertype properties | Select-Object name | Foreach-Object { "`r`n$padding $($_.name):  $(ConvertTo-YAML -inputObject $inputObject.$($_.name) -depth $depth -NestingLevel ($NestingLevel + 1))" })") }
                 <# 
                 'SqlDataReader'{ $all = $inputObject.FieldCount
                     while ($inputObject.Read()) {for ($i = 0; $i -lt $all; $i++)
@@ -237,6 +236,7 @@ function ConvertTo-Yaml
                 #>
                 default { "'$inputObject'" }
             }
+        return $Output
         }
         catch
         {
