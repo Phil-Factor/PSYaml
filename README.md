@@ -42,7 +42,7 @@ ConvertTo-YAML $YamlObject
 ```
 
 ## Contact Information
-Author: Phil-Factor, Brian Marsh
+Author: Phil-Factor (philipFactor@gmail.com)
 
 ## Release Notes
 |  Version  | Change Log                                                        |
