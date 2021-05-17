@@ -56,8 +56,8 @@ function ConvertFrom-YAMLDocument
     }
     elseif ($TheTypeOfNode -eq 'YamlMappingNode') #ah mapping nodes 
     {
-        $TheObject = [ordered]@{ }
-        $theNode | ForEach-Object{ 
+        $TheObject = New-Object System.Collections.Specialized.OrderedDictionary
+        $theNode | ForEach-Object{
                         $TheObject.($_.Key.Value) = ConvertFrom-YAMLDocument $_.Value
                    }
     }
