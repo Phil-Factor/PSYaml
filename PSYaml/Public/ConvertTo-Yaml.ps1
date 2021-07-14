@@ -35,7 +35,7 @@ function ConvertTo-Yaml
     PROCESS
     {
         # if it is null return null
-        If ( !($inputObject) )
+        If ( $inputObject -eq $null )
         {
             
             return ''
