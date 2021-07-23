@@ -59,13 +59,10 @@ Install-Module FXPSYaml -Force
 Import-Module FXPSYaml
 ```
 ### Local Install
-
-* Install and import PSDeploy module.
-
 ```powershell
 # Install / Import PSDeploy
 Install-Module PSDeploy
-Import-Module PSDeplooy
+Import-Module PSDeploy
 
 # Run PSDeploy
 PSDeploy <path_to_PSDeploy_folder>\PSYaml.PSDeploy.ps1
@@ -73,7 +70,6 @@ PSDeploy <path_to_PSDeploy_folder>\PSYaml.PSDeploy.ps1
 # Import PSYaml
 Import-Module <path_to_PSYaml_folder>\PSYaml.psm1
 ```
-
 ## Get commands in the module
 ```powershell
 Get-Command -Module PSYaml
