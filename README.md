@@ -43,7 +43,7 @@ nested:
 key: value
 "@
 
-$YamlObject = ConvertFrom-YAML $yamlString
+$yamlString | ConvertFrom-YAML
 
 # Converting from a Powershell hashtable to Yaml.
 $hashtable = @{anArray = 1, 2, 3; nested = @{array = 1, 2, 3}; key = "value"}
