@@ -52,7 +52,13 @@ Author: Phil-Factor (philipFactor@gmail.com)
 |  1.0.1    | Converted single psm1 file to multiple public/private functions   |
 
 ## Installation
-### Setup
+### PSGallery Install
+* Assuming you have PowerShell v5 and a Nuget Repository configured, use the built in Module management
+```powershell
+Install-Module FXPSYaml -Force
+Import-Module FXPSYaml
+```
+### Local Install
 
 * Install and import PSDeploy module.
 
@@ -66,12 +72,6 @@ PSDeploy <path_to_PSDeploy_folder>\PSYaml.PSDeploy.ps1
 
 # Import PSYaml
 Import-Module <path_to_PSYaml_folder>\PSYaml.psm1
-```
-### Automated Install
-* Assuming you have PowerShell v5 and a Nuget Repository configured, use the built in Module management
-```powershell
-Install-Module FXPSYaml -Force
-Import-Module FXPSYaml
 ```
 
 ## Get commands in the module
