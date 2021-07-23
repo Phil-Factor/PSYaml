@@ -60,8 +60,10 @@ Author: Phil-Factor (philipFactor@gmail.com)
 # Install / Import PSDeploy
 Install-Module PSDeploy
 Import-Module PSDeplooy
+
 # Run PSDeploy
 PSDeploy <path_to_PSDeploy_folder>\PSYaml.PSDeploy.ps1
+
 # Import PSYaml
 Import-Module <path_to_PSYaml_folder>\PSYaml.psm1
 ```
@@ -81,5 +83,3 @@ Get-Command -Module PSYaml
 Get-Help ConvertFrom-Yaml -Full
 Get-Help about_PSYaml
 ```
-
-
