@@ -91,5 +91,5 @@ Get-Command -Module PSYaml
 > Use PSYaml instead FXPSYaml if you have installed it using Local install method
 ```powershell
 # Get full help of all module commands
-get-command -Module FXPSYaml | select -ExpandProperty name | ForEach-Object {write-host "$_" -BackgroundColor "red"; Get-Help $_}
+get-command -Module FXPSYaml | select -ExpandProperty name | ForEach-Object {write-host "$_" -BackgroundColor "red"; Get-Help $_ -full}
 ```
