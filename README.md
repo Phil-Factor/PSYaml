@@ -62,14 +62,18 @@ Author: Phil-Factor (philipFactor@gmail.com)
 
 # Installation
 ### PSGallery Install
-* Assuming you have PowerShell v5 and a Nuget Repository configured, use the built in Module management
+`Requires Powershell V5`
 ```powershell
+# [Optional] Ensure PowershellGet package provider is up to date
+# Install-Module -Name PowerShellGet -Repository PSGallery -Force
+
+# Install and Import module from PSGallery
 Install-Module FXPSYaml -Force
 Import-Module FXPSYaml
 ```
 ### Local Install
 ```powershell
-# Install / Import PSDeploy
+# Install / Import PSDeploy module first
 Install-Module PSDeploy
 Import-Module PSDeploy
 
@@ -84,7 +88,8 @@ Import-Module <path_to_PSYaml_folder>\PSYaml.psm1
 Get-Command -Module PSYaml
 ```
 # Get help
+> Use PSYaml instead FXPSYaml if you have installed it using Local install method
 ```powershell
-Get-Help ConvertFrom-Yaml -Full
-Get-Help about_PSYaml
+# Get full help of all module commands
+get-command -Module FXPSYaml | select -ExpandProperty name | ForEach-Object {write-host "$_" -BackgroundColor "red"; Get-Help $_}
 ```
