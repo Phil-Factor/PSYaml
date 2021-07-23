@@ -52,22 +52,34 @@ Author: Phil-Factor (philipFactor@gmail.com)
 |  1.0.1    | Converted single psm1 file to multiple public/private functions   |
 
 ## Installation
-### One time setup
-* Download/clone the repository
-* Copy the PSYaml folder to a module path (e.g. `$env:USERPROFILE\Documents\WindowsPowerShell\Modules\`)
-* Alternatively, in the PS-PSYaml folder use PSDeploy (`Invoke-PSDeploy -Path .\PSDeploy\`)
+### Setup
 
+* Install and import PSDeploy module.
+
+```powershell
+# Install / Import PSDeploy
+Install-Module PSDeploy
+Import-Module PSDeplooy
+# Run PSDeploy
+PSDeploy <path_to_PSDeploy_folder>\PSYaml.PSDeploy.ps1
+# Import PSYaml
+Import-Module <path_to_PSYaml_folder>\PSYaml.psm1
+```
 ### Automated Install
-* Assuming you have PowerShell v5 and a Nuget Repository configured, use the built in Module management (`Install-Module PSYaml`)
-
-## Import the module.
-`Import-Module PSYaml    #Alternatively, Import-Module \\Path\To\PSYaml`
+* Assuming you have PowerShell v5 and a Nuget Repository configured, use the built in Module management
+```powershell
+Install-Module FXPSYaml -Force
+Import-Module FXPSYaml
+```
 
 ## Get commands in the module
-`Get-Command -Module PSYaml`
-
+```powershell
+Get-Command -Module PSYaml
+```
 ## Get help
-`Get-Help ConvertFrom-Yaml -Full`
-`Get-Help about_PSYaml`
+```powershell
+Get-Help ConvertFrom-Yaml -Full
+Get-Help about_PSYaml
+```
 
 
